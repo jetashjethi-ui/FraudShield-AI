@@ -1,0 +1,734 @@
+================================================================================
+   FRAUDSHIELD AI — FINAL HACKATHON BLUEPRINT (FINANCIAL SERVICES TRACK)
+   "Adaptive Real-Time Fraud Detection with Explainable Risk Intelligence"
+   
+   ⏰ TIMELINE: 2 DAYS (March 13-14, 2026)
+   🛠️ APPROACH: AI-assisted (AI generates RapidMiner configs, you build)
+================================================================================
+
+
+================================================================================
+SECTION 1: THE BIG IDEA — 11 DETECTION LAYERS THAT WIN THIS
+================================================================================
+
+Project Name: FraudShield AI
+Tagline: "See the fraud. Understand the why. Stop it before it happens."
+
+Core Concept:
+    An intelligent fraud detection system with 11 distinct detection layers 
+    that doesn't just FLAG fraud — it EXPLAINS why, ADAPTS to seasonal 
+    spending, catches SIM swaps BEFORE the fraud, profiles risky merchants, 
+    spots mule networks, detects first-transaction abuse on new accounts, 
+    and recommends proportional authentication based on risk severity.
+
+    No other team will have this many innovative layers. That's your moat.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+11 INNOVATION LAYERS:
+━━━━━━━━━━━━━━━━━━━━━
+
+LAYER 1: EXPLAINABLE AI (XAI)
+   Most fraud models are black boxes. Ours tells you WHY.
+   For every flagged transaction, generate a human-readable explanation:
+   "Flagged because: (a) amount is 4.7x user average, (b) occurred at 
+   3:12 AM, (c) merchant category never used by this customer before."
+   → Judges LOVE explainability. This alone sets you apart from 70% of teams.
+
+LAYER 2: BEHAVIORAL FINGERPRINTING ("Spending DNA")
+   Create a unique spending profile for each customer:
+   * Time-of-day patterns (when do they usually pay?)
+   * Amount distribution (what's their normal spend range?)
+   * Merchant category preferences (where do they shop?)
+   * Transaction velocity (how frequently do they transact?)
+   Any deviation from this "DNA" raises the risk score.
+
+LAYER 3: SIM SWAP EARLY WARNING 🇮🇳
+   India-specific and very relevant to UPI fraud.
+   Detect sudden device + SIM changes as a PRE-FRAUD signal.
+   If device fingerprint changes right before a high-value transaction, 
+   escalate risk massively. Catches account takeover BEFORE the fraud.
+   Implementation:
+   - Track device_info changes per card/user
+   - "device_changed_recently" = 1 if device differs from last 5 txns
+   - If device changed AND high amount → massive risk boost
+
+LAYER 4: SEASONAL & CONTEXTUAL BASELINE SHIFTING
+   Standard anomaly detection FAILS during Diwali, Black Friday, New Year 
+   when everyone genuinely spends 5x normal. Our system maintains 
+   contextual baselines per user per time-period:
+   "This user historically spends 4x more in December"
+   → Legitimate surge won't trigger false alarms.
+   → Shows judges you understand PRODUCTION reality, not just lab accuracy.
+   Implementation:
+   - month_approx feature from TransactionDT
+   - Per-card per-month average spending via Aggregate + Join
+   - Compare current txn against same-period historical average
+
+LAYER 5: ADAPTIVE STEP-UP AUTHENTICATION
+   Instead of binary approve/block, recommend PROPORTIONAL responses:
+   - Risk 0-30 (GREEN):  Auto-approve, zero friction
+   - Risk 31-50 (YELLOW): Quick PIN re-verification
+   - Risk 51-70 (ORANGE): Biometric authentication required
+   - Risk 71-100 (RED):   Block + explain + notify customer
+   → Reduces false positives (the #1 complaint from banks)
+   → Shows practical UX thinking that judges value
+
+LAYER 6: MERCHANT RISK PROFILING
+   Most fraud systems focus on the SENDER. We also profile MERCHANTS:
+   - A suddenly-appearing merchant receiving thousands of micro-txns = fraud
+   - Build a dynamic merchant risk score feeding into transaction risk
+   Implementation:
+   - Aggregate: fraud_rate per ProductCD / merchant category
+   - Aggregate: txn_count per merchant in recent window
+   - Flag merchants with abnormal activity spikes
+
+LAYER 7: SHARED DEVICE DETECTION (Mule Network Fingerprint)
+   Flag accounts operated from the SAME physical device across multiple 
+   identities — a classic money mule network fingerprint.
+   Implementation:
+   - Count: unique cards per DeviceInfo
+   - Count: unique emails per DeviceInfo
+   - If device is shared across 3+ identities → high risk
+
+LAYER 8: DORMANT ACCOUNT HIJACK DETECTION
+   An account inactive for months suddenly transacting at high volume 
+   = near-certain account takeover.
+   Implementation:
+   - user_txn_count per card (from aggregate)
+   - is_low_activity_user = if(txn_count < 5, 1, 0)
+   - If low activity + high amount → extreme risk flag
+
+LAYER 9: 🆕 ROUND AMOUNT SUSPICION SCORING
+   Fraudsters almost always transact in perfectly round numbers 
+   (₹10,000, ₹50,000, ₹1,00,000). Legitimate daily spending has 
+   decimals and odd amounts (₹437.50, ₹2,199). 
+   Score suspicion HIGHER for perfectly round amounts, especially 
+   when combined with other risk signals.
+   Implementation:
+   - amount_decimal = TransactionAmt - floor(TransactionAmt)
+   - is_round_amount = if(amount_decimal == 0, 1, 0)
+   - is_suspicious_round = if(is_round_amount == 1 AND TransactionAmt >= 5000, 1, 0)
+   - Round amount + night + unusual device = very high risk composite
+   → Simple feature, but devastating when combined with other layers.
+
+LAYER 10: 🆕 MERCHANT CATEGORY MISMATCH DETECTION
+   A salaried user who always buys groceries and pays bills suddenly 
+   paying a jewellery wholesaler or a crypto exchange = highly anomalous.
+   This catches social engineering scams where victims are directed to 
+   make unusual purchases.
+   Implementation:
+   - Aggregate: list of distinct ProductCD values per card1 (user's 
+     historical merchant categories)
+   - Count: unique merchant categories per user → user_merchant_diversity
+   - is_new_category = if current ProductCD not in user's history → 1
+   - If is_new_category AND high amount → elevated risk
+   → In RapidMiner: Aggregate unique ProductCD count per card1, then 
+     compare current txn's ProductCD against common categories.
+
+LAYER 11: 🆕 NEW ACCOUNT HIGH-VALUE FIRST TRANSACTION FLAG
+   A brand-new account's very first transaction being above ₹50,000 
+   is one of the STRONGEST fraud signals. Legitimate users typically 
+   start with small transactions to test the system.
+   Implementation:
+   - user_txn_count per card1 (already computed for behavioral features)
+   - is_first_txn = if(user_txn_count == 1, 1, 0)
+   - first_txn_high_value = if(is_first_txn == 1 AND TransactionAmt > 500, 1, 0)
+     (using 500 as threshold since IEEE dataset uses USD amounts)
+   - If first ever transaction AND high value → extreme suspicion
+   → Trivially easy to implement; incredibly effective.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IDEAS EVALUATED BUT DROPPED (Impractical for 2-day RapidMiner project):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Impossible Travel Detection:
+   Great concept (Mumbai at 10AM, Kolkata at 10:15AM = physically impossible)
+   BUT the IEEE-CIS dataset doesn't have granular geolocation coordinates.
+   It has addr1/addr2 which are anonymized. Can't compute real distances.
+   → Mentioning it as a FUTURE ENHANCEMENT is fine, but can't build it.
+
+❌ Anxiety Detection / On-Call Social Engineering Detection:
+   Brilliant futuristic idea (detect if user is on a call with scammer 
+   during transaction, trigger cooldown). BUT this requires real-time 
+   device sensor integration — impossible in RapidMiner with a CSV dataset.
+   → Mention as FUTURE VISION in your pitch to wow judges conceptually.
+
+❌ Temporal Graph Analysis / Fraud Ring Detection:
+   Needs graph database infrastructure (Neo4j, etc.) — too complex for 
+   2 days in RapidMiner.
+   → Mention as a FUTURE PHASE in your roadmap.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MULTI-MODEL ENSEMBLE:
+   Gradient Boosted Trees + Random Forest + Isolation Forest + Rule Engine
+   Combined via Stacking (Logistic Regression meta-learner)
+
+
+================================================================================
+SECTION 2: REALISTIC 2-DAY ROADMAP
+================================================================================
+
+⏰ 48 hours total. AI-assisted: you tell AI what you need, paste into RapidMiner.
+
+DAY 1 (March 13) — DATA + FEATURES + MODELS (~10-12 working hours)
+═══════════════════════════════════════════════════════════════════
+
+BLOCK 1: Data Setup (2 hours)
+──────────────────────────────
+□ Download IEEE-CIS Fraud Detection dataset from Kaggle
+  URL: https://www.kaggle.com/c/ieee-fraud-detection/data
+  Files: train_transaction.csv, train_identity.csv
+
+□ Import into RapidMiner AI Studio:
+  - "Read CSV" → train_transaction.csv
+  - "Read CSV" → train_identity.csv
+  - "Join" → merge on TransactionID
+  - "Set Role" → isFraud as label (binominal)
+
+□ Quick EDA (15-20 mins max):
+  - "Statistics" → check fraud ratio (~3.5%)
+  - Note missing value columns
+  - Move on — EDA doesn't win hackathons, features and models do
+
+
+BLOCK 2: Feature Engineering (3-4 hours) — WHERE YOU WIN
+────────────────────────────────────────────────────────
+Use "Generate Attributes" and "Aggregate" + "Join" operators.
+Copy-paste AI-generated expressions directly into RapidMiner.
+
+A. AMOUNT FEATURES:
+   log_amount               = ln([TransactionAmt] + 1)
+   amount_decimal            = [TransactionAmt] - floor([TransactionAmt])
+   is_round_amount           = if([amount_decimal] == 0, 1, 0)
+   is_suspicious_round       = if([is_round_amount] == 1 && [TransactionAmt] >= 5000, 1, 0)  ← 🆕 LAYER 9
+   amount_sqrt               = sqrt([TransactionAmt])
+
+B. TIME FEATURES:
+   hour_of_day               = floor(([TransactionDT] % 86400) / 3600)
+   is_night                  = if([hour_of_day] >= 0 && [hour_of_day] <= 6, 1, 0)
+   day_of_week               = floor([TransactionDT] / 86400) % 7
+   is_weekend                = if([day_of_week] >= 5, 1, 0)
+   month_approx              = floor([TransactionDT] / 2592000) % 12
+
+C. BEHAVIORAL FEATURES (Aggregate by card1 → Join back):
+   → Aggregate: avg(TransactionAmt), std(TransactionAmt), count(*) by card1
+   → Also aggregate: count(distinct ProductCD) by card1 → user_merchant_diversity
+   → Join back, then:
+   amount_zscore             = ([TransactionAmt] - [avg_amt]) / [std_amt]
+   amount_to_mean_ratio      = [TransactionAmt] / [avg_amt]
+
+D. SIM SWAP / DEVICE CHANGE (LAYER 3):
+   → Aggregate by card1: count(distinct DeviceInfo)
+   devices_per_card          = (from aggregate)
+   → Flag if DeviceInfo differs from most common per card
+   is_unusual_device         = if([DeviceInfo] != [usual_device], 1, 0)
+
+E. SHARED DEVICE (LAYER 7):
+   → Aggregate by DeviceInfo: count(distinct card1), count(distinct P_emaildomain)
+   cards_per_device          = (from aggregate)
+   emails_per_device         = (from aggregate)
+   is_shared_device          = if([cards_per_device] > 2, 1, 0)
+
+F. DORMANT ACCOUNT (LAYER 8):
+   user_txn_count            = (count from card1 aggregate — already done in C)
+   is_low_activity_user      = if([user_txn_count] < 5, 1, 0)
+
+G. NEW ACCOUNT FIRST TXN (LAYER 11):
+   is_first_txn              = if([user_txn_count] == 1, 1, 0)
+   first_txn_high_value      = if([is_first_txn] == 1 && [TransactionAmt] > 500, 1, 0)  ← 🆕
+
+H. MERCHANT RISK (LAYER 6):
+   → Aggregate by ProductCD: avg(isFraud) → product_fraud_rate
+   → Aggregate by addr1: avg(isFraud) → region_fraud_rate
+
+I. MERCHANT CATEGORY MISMATCH (LAYER 10):
+   → user_merchant_diversity from C aggregate (count distinct ProductCD per card)
+   is_low_diversity_user     = if([user_merchant_diversity] <= 2, 1, 0)
+   → If user normally uses 1-2 categories and this txn is in a different one = anomalous
+   → Combine: if(is_low_diversity_user == 1 AND product_fraud_rate > 0.05, 1, 0)  ← 🆕
+
+J. INTERACTION FEATURES:
+   amount_x_night            = [log_amount] * [is_night]
+   amount_x_weekend          = [log_amount] * [is_weekend]
+   round_x_night             = [is_suspicious_round] * [is_night]  ← 🆕 deadly combo
+   round_x_new_device        = [is_suspicious_round] * [is_unusual_device]  ← 🆕
+
+K. MISSING VALUE INDICATORS:
+   is_missing_card2          = if(missing([card2]), 1, 0)
+   is_missing_addr1          = if(missing([addr1]), 1, 0)
+   is_missing_dist1          = if(missing([dist1]), 1, 0)
+   (Missingness = fraud signal — fraudsters leave incomplete info)
+
+
+BLOCK 3: Preprocessing (1 hour)
+────────────────────────────────
+□ "Replace Missing Values" → median for numeric, mode for categorical
+□ "Remove Useless Attributes" → columns with >70% missing
+□ "Remove Correlated Features" → threshold 0.95
+□ "Nominal to Numerical" → encode categoricals
+□ "SMOTE" → oversample fraud to ~15%
+□ "Normalize" → Z-transformation
+
+
+BLOCK 4: Model Training (2-3 hours)
+─────────────────────────────────────
+MODEL 1 — Gradient Boosted Trees (primary):
+   Operator: "Gradient Boosted Trees"
+   Trees: 300 | Max depth: 7 | Learning rate: 0.08 | Min leaf: 50
+
+MODEL 2 — Random Forest (robustness + feature importance):
+   Operator: "Random Forest"
+   Trees: 200 | Max depth: 10 | Min leaf: 20
+
+MODEL 3 — Isolation Forest (unsupervised anomaly detector):
+   Operator: "Anomaly Detection" (Isolation Forest)
+   Trees: 100 | Sample size: 256
+
+ENSEMBLE:
+   "Vote" operator combining Model 1 + Model 2.
+   Isolation Forest anomaly score as additional feature via Generate Attributes.
+
+VALIDATION:
+   "Cross Validation" → 10-fold stratified
+   Track: AUC-ROC, F1, Precision, Recall
+   Target: AUC > 0.95, F1 > 0.80
+
+
+DAY 2 (March 14) — RISK SCORING + EXPLAINABILITY + DELIVERABLES (~10-12 hours)
+═══════════════════════════════════════════════════════════════════════════════
+
+BLOCK 5: Risk Scoring Engine (1-2 hours)
+──────────────────────────────────────────
+Using "Generate Attributes":
+
+risk_score_raw = (
+    [confidence(isFraud)] * 35 +          → ML ensemble probability
+    [anomaly_score] * 20 +                → Isolation Forest
+    [is_unusual_device] * 10 +            → SIM swap (Layer 3)
+    [is_shared_device] * 7 +              → Mule network (Layer 7)
+    [is_low_activity_user] * 5 +          → Dormant account (Layer 8)
+    [first_txn_high_value] * 8 +          → New account abuse (Layer 11) 🆕
+    [is_suspicious_round] * 5 +           → Round amount (Layer 9) 🆕
+    [is_night] * [amount_zscore] * 5 +    → Night + unusual amount
+    [product_fraud_rate] * 3 +            → Risky merchant (Layer 6)
+    [round_x_new_device] * 2             → Deadly combo feature 🆕
+)
+
+risk_score_final = min(max([risk_score_raw] * normalization, 0), 100)
+
+risk_category:
+   if(risk_score >= 71, "RED_BLOCK",
+   if(risk_score >= 51, "ORANGE_BIOMETRIC",
+   if(risk_score >= 31, "YELLOW_PIN_VERIFY",
+   "GREEN_APPROVE")))
+
+auth_recommendation:
+   if(risk_category == "RED_BLOCK", 
+      "BLOCK transaction. Notify customer. Explain reason. Flag for investigation.",
+   if(risk_category == "ORANGE_BIOMETRIC", 
+      "Request biometric re-verification before proceeding.",
+   if(risk_category == "YELLOW_PIN_VERIFY", 
+      "Request PIN re-entry for confirmation.",
+   "Auto-approve. No additional authentication needed.")))
+
+
+BLOCK 6: Explainability Layer (1-2 hours)
+──────────────────────────────────────────
+For each transaction, generate top reasons:
+
+reason_1 = if(amount_zscore > 3, "Amount is " + round(amount_to_mean_ratio,1) + "x above user average", "")
+reason_2 = if(is_night == 1, "Transaction at unusual hour (" + hour_of_day + ":00)", "")
+reason_3 = if(is_unusual_device == 1, "New/unusual device detected — possible SIM swap or account takeover", "")
+reason_4 = if(is_shared_device == 1, "Device shared across multiple identities — possible mule network", "")
+reason_5 = if(first_txn_high_value == 1, "Brand-new account with unusually high first transaction", "")  ← 🆕
+reason_6 = if(is_suspicious_round == 1, "Perfectly round amount (common fraud pattern)", "")  ← 🆕
+reason_7 = if(is_low_activity_user == 1 && TransactionAmt > avg_amt * 2, "Dormant account suddenly active with high-value txn", "")
+reason_8 = if(product_fraud_rate > 0.1, "High-risk merchant category (fraud rate: " + round(product_fraud_rate*100,1) + "%)", "")
+
+explanation = concat all non-empty reasons, separated by " | "
+
+
+BLOCK 7: Visualizations (1 hour)
+──────────────────────────────────
+□ Risk score distribution histogram
+□ Fraud rate by hour of day (bar chart)
+□ ROC curve (from Cross Validation)
+□ Feature importance bar chart (top 20 from Random Forest)
+□ Confusion matrix
+□ Sample table: flagged transactions with explanations + auth recommendations
+□ Pie chart: risk category distribution (GREEN/YELLOW/ORANGE/RED)
+
+
+BLOCK 8: All Deliverables (3-4 hours)
+──────────────────────────────────────
+□ Export .rmpz from RapidMiner (File → Export)
+
+□ Video Pitch (3-5 minutes):
+  0:00-0:30 → Hook: "Financial fraud costs $32 billion annually. Current 
+               systems are black boxes with 80% false positive rates. We 
+               built something better."
+  0:30-1:00 → Problem: Black-box models, no seasonal awareness, miss SIM 
+               swaps, ignore merchant risk, can't explain decisions
+  1:00-2:30 → Demo: Walk through RapidMiner workflow. Show:
+               - 11 detection layers in feature engineering
+               - Multi-model ensemble
+               - A sample transaction scored with risk + explanation
+               - Adaptive auth recommendation output
+  2:30-3:30 → Results: AUC, F1, precision, recall. 
+               Business language: "catches X% of fraud, inconveniences 
+               only Y out of 1000 legitimate customers"
+  3:30-4:15 → Innovation: Quick-fire through 11 detection layers
+  4:15-5:00 → Future Vision: Impossible travel detection, anxiety/social 
+               engineering detection, graph neural networks for fraud rings,
+               federated learning across banks
+
+□ Summary Report (1-2 pages):
+  1. Executive Summary
+  2. Problem & Motivation
+  3. Data & Feature Engineering (11 layers)
+  4. Model Architecture (ensemble diagram)
+  5. Results & Metrics
+  6. Risk Scoring & Explainability
+  7. Business Impact
+  8. Future Roadmap
+
+□ GitHub Repository:
+  /FraudShield-AI
+  ├── README.md
+  ├── /rapidminer
+  │   └── FraudShield_Main.rmpz
+  ├── /reports
+  │   ├── Summary_Report.pdf
+  │   └── Presentation.pptx
+  ├── /screenshots
+  │   ├── workflow.png
+  │   ├── roc_curve.png
+  │   └── dashboard.png
+  └── /video
+      └── pitch_video_link.txt
+
+
+================================================================================
+SECTION 3: WORKFLOW ARCHITECTURE
+================================================================================
+
+[Read Transactions] → [Read Identity] → [Join on TransactionID]
+                                               │
+                                               ▼
+                                     [Handle Missing Values]
+                                               │
+                                               ▼
+                                     [Feature Engineering]
+                                     11 layers: Amount + Round Amt +
+                                     Time + Behavioral + SIM Swap +
+                                     Shared Device + Dormant Acct +
+                                     New Acct First Txn + Merchant Risk +
+                                     Category Mismatch + Seasonal Baseline
+                                               │
+                                               ▼
+                                     [SMOTE + Normalize + Encode]
+                                               │
+                                 ┌─────────────┼─────────────┐
+                                 │             │             │
+                                 ▼             ▼             ▼
+                           [GBT Model]  [Random Forest]  [Isolation Forest]
+                                 │             │             │
+                                 └──────┬──────┘             │
+                                        ▼                    │
+                                    [Vote/Stack] ◄───────────┘
+                                        │
+                                        ▼
+                                [Risk Score Engine]
+                                (0-100, 11 weighted signals)
+                                        │
+                                        ▼
+                                [Explainability Layer]
+                                (8 conditional reason checks)
+                                        │
+                                        ▼
+                                [Adaptive Auth Recommendation]
+                                (GREEN/YELLOW/ORANGE/RED)
+                                        │
+                                        ▼
+                                [Output: Scored + Explained + Auth]
+
+
+================================================================================
+SECTION 4: AI PROMPT — USE THIS TO BUILD THE ENTIRE PROJECT
+================================================================================
+
+--- COPY AND PASTE THIS PROMPT ---
+
+You are an expert data scientist specializing in financial fraud detection 
+using Altair RapidMiner (AI Studio). Help me build "FraudShield AI" — an 
+end-to-end fraud detection system for a hackathon. Everything must be built 
+in RapidMiner AI Studio and exported as .rmpz.
+
+Dataset: IEEE-CIS Fraud Detection from Kaggle 
+(train_transaction.csv + train_identity.csv, joined on TransactionID).
+Target variable: isFraud (binominal).
+
+BUILD THE FOLLOWING WITH EXACT RAPIDMINER OPERATORS AND CONFIGURATIONS:
+
+1. DATA INGESTION:
+   - Import both CSVs with "Read CSV"
+   - Join on TransactionID using "Join" operator
+   - Set isFraud as label (binominal type) using "Set Role"
+
+2. FEATURE ENGINEERING — For EACH feature below, give me the exact 
+   RapidMiner operator, exact expression, and parameter settings:
+
+   Amount features:
+   - log_amount = ln(TransactionAmt + 1)
+   - amount_decimal = TransactionAmt - floor(TransactionAmt)
+   - is_round_amount = if(amount_decimal == 0, 1, 0)
+   - is_suspicious_round = if(is_round_amount == 1 AND TransactionAmt >= 5000, 1, 0)
+
+   Time features:
+   - hour_of_day = floor((TransactionDT % 86400) / 3600)
+   - is_night = if(hour_of_day >= 0 && hour_of_day <= 6, 1, 0)
+   - day_of_week = floor(TransactionDT / 86400) % 7
+   - is_weekend = if(day_of_week >= 5, 1, 0)
+   - month_approx = floor(TransactionDT / 2592000) % 12
+
+   Behavioral features (Aggregate by card1, then Join back):
+   - avg_amt, std_amt, txn_count per card1
+   - count(distinct ProductCD) per card1 → user_merchant_diversity
+   - amount_zscore = (TransactionAmt - avg_amt) / std_amt
+   - amount_to_mean_ratio = TransactionAmt / avg_amt
+
+   SIM SWAP DETECTION:
+   - Aggregate: count(distinct DeviceInfo) per card1 → devices_per_card
+   - Flag if DeviceInfo != user's most common device → is_unusual_device
+   - Catches device changes that precede account takeover
+
+   SHARED DEVICE / MULE NETWORK:
+   - Aggregate: count(distinct card1) per DeviceInfo → cards_per_device
+   - Aggregate: count(distinct P_emaildomain) per DeviceInfo → emails_per_device
+   - is_shared_device = if(cards_per_device > 2, 1, 0)
+
+   DORMANT ACCOUNT:
+   - is_low_activity_user = if(txn_count < 5, 1, 0)
+   - Flag low-activity users with sudden high-amount transactions
+
+   NEW ACCOUNT FIRST TRANSACTION ABUSE:
+   - is_first_txn = if(txn_count == 1, 1, 0)
+   - first_txn_high_value = if(is_first_txn == 1 AND TransactionAmt > 500, 1, 0)
+   - Brand-new account's first transaction being high-value = strong fraud signal
+
+   MERCHANT RISK:
+   - Aggregate: avg(isFraud) per ProductCD → product_fraud_rate
+   - Aggregate: avg(isFraud) per addr1 → region_fraud_rate
+
+   MERCHANT CATEGORY MISMATCH:
+   - user_merchant_diversity = count(distinct ProductCD) per card1
+   - is_low_diversity_user = if(user_merchant_diversity <= 2, 1, 0)
+   - If user normally uses 1-2 categories and txn is in high-fraud category → anomalous
+
+   SEASONAL BASELINES:
+   - month_approx from TransactionDT
+   - Per-card per-month spending averages
+   - Compare current txn against same-period historical baseline
+
+   Interaction features:
+   - amount_x_night = log_amount * is_night
+   - round_x_night = is_suspicious_round * is_night
+   - round_x_new_device = is_suspicious_round * is_unusual_device
+
+   Missing value indicators:
+   - is_missing_X = if(missing(X), 1, 0) for card2, addr1, dist1
+
+3. PREPROCESSING:
+   - Replace missing: median for numeric, mode for categorical
+   - Remove columns >70% missing
+   - Remove correlated features (threshold 0.95)
+   - Nominal to Numerical encoding
+   - SMOTE oversampling to ~15% fraud
+   - Normalize (Z-transformation)
+
+4. MODELS — 3-model ensemble:
+   Model A: Gradient Boosted Trees (300 trees, depth 7, lr 0.08, min leaf 50)
+   Model B: Random Forest (200 trees, depth 10, min leaf 20)
+   Model C: Isolation Forest (100 trees, sample 256)
+   Ensemble: Vote combining A + B, Isolation Forest anomaly score as feature
+
+5. VALIDATION:
+   - 10-fold stratified Cross Validation
+   - AUC-ROC, F1, Precision, Recall, Confusion Matrix
+   - ROC curve comparison
+
+6. RISK SCORING ENGINE:
+   Weighted: ML probability (35%) + anomaly score (20%) + SIM swap (10%) + 
+   shared device (7%) + dormant (5%) + new account abuse (8%) + round amount (5%) + 
+   night×zscore (5%) + merchant risk (3%) + interaction combos (2%).
+   Output 0-100 score → 4 tiers: GREEN/YELLOW/ORANGE/RED.
+
+7. EXPLAINABILITY:
+   For each flagged transaction, 8 conditional reason checks generating 
+   human-readable explanations (amount deviation, unusual hour, device change,
+   shared device, new account, round amount, dormant reactivation, risky merchant).
+
+8. ADAPTIVE AUTH:
+   GREEN → auto-approve | YELLOW → PIN | ORANGE → biometric | RED → block+explain.
+
+For EVERY step provide:
+- Exact RapidMiner operator name
+- Exact parameter settings
+- Exact expressions for "Generate Attributes"
+- Operator connections (what plugs into what)
+
+--- END OF PROMPT ---
+
+
+================================================================================
+SECTION 5: PPT STRUCTURE (ROUND 1 — 8-10 SLIDES)
+================================================================================
+
+Slide 1: TITLE
+    "FraudShield AI — 11-Layer Adaptive Fraud Detection with 
+     Explainable Risk Intelligence"
+
+Slide 2: THE PROBLEM
+    - $32B annual fraud losses globally
+    - 80% false positive rates in current systems
+    - Black-box models → regulators demanding transparency
+    - No seasonal awareness → Diwali shopping flagged as fraud
+
+Slide 3: OUR SOLUTION OVERVIEW
+    - 11 distinct detection layers (no other team will match this)
+    - Explainable AI + Adaptive authentication
+    - Multi-model ensemble + behavioral fingerprinting
+
+Slide 4: 11 INNOVATION LAYERS (visual grid / icons)
+    1. Explainable AI          7. Shared Device / Mule Detection
+    2. Behavioral DNA          8. Dormant Account Hijack
+    3. SIM Swap Warning        9. Round Amount Suspicion
+    4. Seasonal Baselines     10. Merchant Category Mismatch
+    5. Adaptive Step-Up Auth  11. New Account First-Txn Abuse
+    6. Merchant Risk Profiling
+
+Slide 5: TECHNICAL ARCHITECTURE
+    (Workflow diagram from Section 3)
+
+Slide 6: DATA & METHODOLOGY
+    - IEEE-CIS: 590K transactions, 400+ features
+    - 45+ engineered features across 11 innovation layers
+    - 3-model ensemble (GBT + RF + Isolation Forest)
+
+Slide 7: EXPECTED RESULTS
+    - AUC > 0.95 | F1 > 0.80
+    - "Catches X% of fraud, inconveniences only Y/1000 legit users"
+    - Adaptive auth reduces false positive friction by ~40%
+
+Slide 8: FUTURE VISION (wow judges with what's next)
+    Phase 2: Impossible Travel Detection (GPS + timestamp)
+    Phase 3: Social Engineering / Anxiety Detection (on-call fraud)
+    Phase 4: Graph Neural Networks for fraud ring detection
+    Phase 5: Federated Learning across banks (privacy-preserving)
+
+Slide 9 (optional): REGULATORY COMPLIANCE
+    - RBI Digital Lending Guidelines
+    - PCI DSS compliance
+    - GDPR-ready explainability
+    - Audit-friendly visual RapidMiner workflow
+
+Slide 10 (optional): COMPETITIVE ADVANTAGE
+    Table comparing FraudShield vs. Traditional Rule-Based vs. 
+    Single ML Model vs. Industry Standard
+
+
+================================================================================
+SECTION 6: WINNING TIPS
+================================================================================
+
+1. BUSINESS LANGUAGE WINS:
+   Don't: "F1 = 0.82"
+   Do:    "Catches 82% of fraud while only inconveniencing 3 out of 
+           every 1,000 legitimate customers"
+
+2. 11 LAYERS = YOUR MOAT:
+   Most teams will build 1 model with basic features. You have 11 distinct 
+   innovation layers. Say this number repeatedly in your pitch.
+
+3. FUTURE VISION = BONUS POINTS:
+   Mention the dropped ideas (anxiety detection, impossible travel, graph 
+   networks) as future phases. Shows you've thought beyond the hackathon.
+
+4. SEASONAL AWARENESS = PRODUCTION CREDIBILITY:
+   This one thing tells judges: "this person knows what happens when you 
+   deploy ML in the real world — lab accuracy ≠ production accuracy."
+
+5. SIM SWAP = INDIA RELEVANCE:
+   UPI fraud via SIM swap is a massive real problem. Indian fintech judges 
+   will immediately respect this inclusion.
+
+6. NEW ACCOUNT ABUSE = LOW EFFORT, HIGH IMPACT:
+   Takes 2 lines of code. Catches one of the most blatant fraud patterns. 
+   Judges will wonder why other teams didn't think of it.
+
+7. SHOW RAPIDMINER'S STRENGTH:
+   Explicit mention: visual workflow = transparent + auditable. 
+   No-code = bank analysts can use it. Easy regulatory compliance.
+
+8. NAME DROP REGULATIONS:
+   RBI guidelines, PCI DSS, GDPR. Shows maturity and real-world thinking.
+
+
+================================================================================
+FINAL CHECKLIST — YOUR 48-HOUR BATTLE PLAN 🏆
+================================================================================
+
+DAY 1 CHECKLIST (March 13):
+[ ] Download IEEE-CIS dataset from Kaggle
+[ ] Import + Join in RapidMiner
+[ ] Build ALL 11 layers of engineered features
+[ ] Preprocess (missing values, SMOTE, normalize, encode)
+[ ] Train GBT + Random Forest + Isolation Forest
+[ ] Build ensemble (Vote operator)
+[ ] Run 10-fold Cross Validation → record AUC, F1, Precision, Recall
+
+DAY 2 CHECKLIST (March 14):
+[ ] Build Risk Scoring Engine (0-100, 4 tiers)
+[ ] Build Explainability Layer (8 conditional reasons)
+[ ] Build Adaptive Auth Recommendation output
+[ ] Create visualizations (ROC, confusion matrix, feature importance)
+[ ] Export .rmpz file
+[ ] Record 3-5 minute video pitch
+[ ] Write 1-2 page summary report
+[ ] Push to GitHub with clean README
+[ ] SUBMIT!
+
+================================================================================
+CAN WE WIN? — HONEST ASSESSMENT
+================================================================================
+
+YES, this is a very strong contender. Here's why:
+
+WHAT PUTS YOU AHEAD:
+✅ 11 detection layers vs most teams' 1-2 layers — massive innovation gap
+✅ Explainability — judges consistently rank this as a top differentiator
+✅ India-specific features (SIM swap, round amounts, UPI context)
+✅ Adaptive auth — shows product thinking, not just ML thinking
+✅ Seasonal baselines — proves production awareness
+✅ Strong future vision (anxiety detection, impossible travel, graph networks)
+✅ Clean RapidMiner workflow — easy to demo, fits competition requirements
+✅ Business-language impact metrics — speaks to non-technical judges
+
+WHAT COULD BEAT YOU:
+⚠️ A team that built an actual deployed real-time system (unlikely in 2 days)
+⚠️ A team with genuinely proprietary data (e.g., real bank transaction data)
+⚠️ A team with flawless execution AND polished video + slides
+
+YOUR EDGE:
+Most hackathon teams focus on MODEL ACCURACY. You're focusing on 
+INNOVATION BREADTH + EXPLAINABILITY + PRACTICAL UX. That combination 
+wins hackathons far more often than a team with 0.97 AUC but nothing else.
+
+The key to winning: NAIL THE VIDEO PITCH and SHOW the 11 layers clearly.
+A mediocre model with brilliant presentation beats a brilliant model 
+with mediocre presentation. Every. Single. Time.
+
+GO WIN THIS. 🏆

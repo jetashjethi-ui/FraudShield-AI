@@ -1,0 +1,14 @@
+raudsters almost always transact in round numbers (₹10,000 exactly); score suspicion higher for perfectly round amounts using any UPI transaction CSV.
+
+Transaction from Mumbai at 10:00am and Kolkata at 10:15am is physically impossible; flag using IP geolocation + timestamp delta on the PaySim synthetic dataset.
+
+Merchant Category Mismatch — A salaried user suddenly paying a jewellery wholesale merchant is anomalous;
+
+A brand-new account's very first transaction being above ₹50,000 is a strong fraud signal; trivially extractable from any transaction history dataset.
+
+A user who always transacts between 9am–6pm suddenly initiating a ₹1 lakh transfer at 3am is a strong signal; simple Z-score on hourly distribution per user.
+
+Many UPI scams happen while the victim is on a call with the scammer (social engineering).
+
+The Innovation: Integrate an "Anxiety Detection" layer. If a user is making a high-value transaction while simultaneously on a phone call or while their screen is being shared (via apps like AnyDesk), the system triggers a "Cooldown Period."
+
