@@ -359,7 +359,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-    st.caption("Financial Services Hackathon · March 2026")
+    st.caption("FrostHack · March 2026")
 
 
 # ═══════════════════════════════════════════════════════════════════════

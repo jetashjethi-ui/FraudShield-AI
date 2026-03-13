@@ -1,6 +1,6 @@
 # FraudShield AI
 
-Real-time fraud detection system built for the Financial Services Hackathon (March 2026).
+Real-time fraud detection system built for FrostHack (March 2026).
 
 ## What it does
 

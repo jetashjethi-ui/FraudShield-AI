@@ -4,7 +4,7 @@
 ║  with Explainable Risk Intelligence                                     ║
 ║                                                                          ║
 ║  15 Detection Layers | 5-Model Ensemble | Explainable AI              ║
-║  Financial Services Hackathon — March 13-14, 2026                        ║
+║  FrostHack — March 13-14, 2026                                          ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 """
 
