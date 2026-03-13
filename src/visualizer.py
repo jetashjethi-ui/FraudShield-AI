@@ -54,7 +54,7 @@ def plot_roc_curves(results, viz_dir):
     print("  → ROC Curves...")
     fig, ax = plt.subplots(figsize=(10, 7))
     
-    colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6']
+    colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#e67e22']
     for i, (model_name, res) in enumerate(results.items()):
         ax.plot(res['fpr'], res['tpr'],
                 label=f"{res['name']} (AUC={res['auc']:.4f})",
@@ -75,7 +75,10 @@ def plot_roc_curves(results, viz_dir):
 def plot_confusion_matrices(results, viz_dir):
     """Confusion matrices for all models."""
     print("  → Confusion Matrices...")
-    fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+    n_models = len(results)
+    fig, axes = plt.subplots(1, n_models, figsize=(5 * n_models, 5))
+    if n_models == 1:
+        axes = [axes]
     
     for ax, (model_name, res) in zip(axes, results.items()):
         cm = res['confusion_matrix']

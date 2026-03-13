@@ -1,100 +1,59 @@
-# FraudShield AI 🛡️
+# FraudShield AI
 
-**Adaptive Real-Time Fraud Detection with Explainable Risk Intelligence**
+Real-time fraud detection system built for the Financial Services Hackathon (March 2026).
 
-> 11 Detection Layers | Multi-Model Ensemble | Explainable AI | Adaptive Authentication
+## What it does
 
-## 🎯 Overview
+Takes raw transaction data (590K+ transactions), runs it through 15 feature engineering layers, and uses a 5-model ensemble to detect fraud with 95.4% AUC accuracy.
 
-FraudShield AI is an intelligent fraud detection system built for the **Financial Services Hackathon (March 2026)**. Unlike traditional black-box models, FraudShield AI employs **11 distinct detection layers** that don't just flag fraud — they **explain why**, **adapt to seasonal spending**, catch **SIM swaps before the fraud happens**, profile **risky merchants**, spot **mule networks**, detect **first-transaction abuse**, and recommend **proportional authentication** based on risk severity.
+The system outputs a risk score (0-100) for each transaction and categorizes them into 4 tiers:
+- **GREEN** → auto-approve
+- **YELLOW** → PIN verification
+- **ORANGE** → biometric check
+- **RED** → block immediately
 
-## 🏗️ Architecture
+Each decision comes with explainable AI reasons so analysts know *why* a transaction was flagged.
 
-```
-[Data Loading] → [11-Layer Feature Engineering] → [Multi-Model Ensemble]
-                                                          │
-                                                    ┌─────┼─────┐
-                                                    │     │     │
-                                                  XGBoost  RF  IsoForest
-                                                    │     │     │
-                                                    └──┬──┘     │
-                                                       │        │
-                                                  [Weighted Voting]
-                                                       │
-                                                [Risk Score Engine]
-                                                   (0-100 score)
-                                                       │
-                                          ┌────────────┼────────────┐
-                                          │            │            │
-                                  [Explainability] [Risk Tiers] [Adaptive Auth]
-                                  (8 reason checks) (4 colors)  (4 responses)
-```
+## Models
 
-## 🔍 11 Detection Layers
+- XGBoost (AUC: 0.954)
+- CatBoost (AUC: 0.941)
+- MLP Neural Network (AUC: 0.908)
+- Random Forest (AUC: 0.881)
+- Isolation Forest (AUC: 0.702)
+- Weighted ensemble of all 5 with auto-tuned threshold
 
-| # | Layer | Description |
-|---|-------|-------------|
-| 1 | **Explainable AI (XAI)** | Human-readable reasons for every flagged transaction |
-| 2 | **Behavioral Fingerprinting** | Spending DNA per customer (time, amount, merchant patterns) |
-| 3 | **SIM Swap Early Warning** | Detects sudden device/SIM changes before fraud |
-| 4 | **Seasonal Baselines** | Contextual spending norms (Diwali, holidays won't trigger false alarms) |
-| 5 | **Adaptive Step-Up Auth** | GREEN/YELLOW/ORANGE/RED proportional authentication |
-| 6 | **Merchant Risk Profiling** | Dynamic fraud rate scoring per merchant category |
-| 7 | **Shared Device Detection** | Identifies mule networks via shared device fingerprints |
-| 8 | **Dormant Account Hijack** | Flags inactive accounts with sudden high-value activity |
-| 9 | **Round Amount Suspicion** | Scores round amounts higher (₹10,000 vs ₹9,437.50) |
-| 10 | **Category Mismatch** | Detects unusual merchant category choices per user |
-| 11 | **New Account First-Txn** | Flags high-value first transactions on new accounts |
+## How to run
 
-## 🚀 Quick Start
-
-### Prerequisites
 ```bash
-pip install pandas numpy scikit-learn xgboost matplotlib seaborn imbalanced-learn
+pip install -r requirements.txt
 ```
 
-### Dataset
-Download the IEEE-CIS Fraud Detection dataset from [Kaggle](https://www.kaggle.com/c/ieee-fraud-detection/data) and place CSV files in the `data/` directory.
-
-### Run
+Run the full pipeline:
 ```bash
 python main.py
 ```
 
-## 📊 Output
+Launch the dashboard:
+```bash
+streamlit run dashboard.py
+```
 
-The pipeline generates:
-- **Model Metrics**: AUC-ROC, F1, Precision, Recall for all models
-- **Scored Transactions**: Every transaction with risk score (0-100), risk tier, and explanation
-- **Visualizations**: 10 publication-ready charts in `outputs/visualizations/`
-- **Sample Flagged Transactions**: Top fraudulent transactions with explanations
+## Dataset
 
-## 📁 Project Structure
+Uses the [IEEE-CIS Fraud Detection](https://www.kaggle.com/c/ieee-fraud-detection) dataset from Kaggle. Place `train_transaction.csv` and `train_identity.csv` in the `data/` folder.
+
+## Project structure
 
 ```
-FraudShield-AI/
-├── main.py                    # Entry point — runs complete pipeline
+├── main.py              # runs the full pipeline
+├── dashboard.py         # streamlit demo dashboard
 ├── src/
-│   ├── data_loader.py         # Data loading, merging, cleaning
-│   ├── feature_engine.py      # 11 detection layers as features
-│   ├── models.py              # XGBoost + RF + IsoForest + Ensemble
-│   ├── risk_scorer.py         # Risk scoring + explainability
-│   └── visualizer.py          # 10 visualization charts
-├── data/                      # IEEE-CIS dataset (CSV files)
-├── outputs/
-│   ├── results/               # Metrics, scored CSVs
-│   └── visualizations/        # Generated charts
-└── README.md
+│   ├── data_loader.py   # loads and merges datasets
+│   ├── feature_engine.py # 15 feature engineering layers
+│   ├── models.py        # model training + ensemble
+│   ├── risk_scorer.py   # risk scoring + explanations
+│   └── visualizer.py    # chart generation
+├── data/                # dataset files (not in repo)
+└── outputs/             # results, charts, model artifacts
 ```
-
-## 🏆 Hackathon Differentiators
-
-1. **11 layers vs competitors' 1-2** — massive innovation gap
-2. **Explainability** — judges consistently rank this #1
-3. **India-specific** features (SIM swap, round amounts, UPI context)
-4. **Adaptive auth** — product thinking, not just ML
-5. **Seasonal awareness** — production-ready, not just lab accuracy
-
-## 📜 License
-
-Built for the Financial Services Hackathon, March 2026.

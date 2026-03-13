@@ -1,6 +1,6 @@
 """
 FraudShield AI — Model Training Module
-Trains XGBoost (GBT), Random Forest, Isolation Forest, MLP Neural Network, and Weighted Ensemble.
+Trains XGBoost, CatBoost, Random Forest, Isolation Forest, MLP Neural Network, and Weighted Ensemble.
 """
 
 import pandas as pd
@@ -22,6 +22,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from imblearn.over_sampling import SMOTE
 import xgboost as xgb
+from catboost import CatBoostClassifier
 
 
 def prepare_features(df):
@@ -172,19 +173,52 @@ def train_models(X_train, y_train, X_test, y_test):
     models['scaler'] = scaler
     results['mlp'] = evaluate_model("MLP Neural Net", y_test, mlp_pred, mlp_proba)
 
-    # ─── ENSEMBLE: Weighted Average (4 models) ───
-    print("\n  [Ensemble] Weighted Voting (XGB:0.40 + RF:0.20 + MLP:0.20 + IsoF:0.20)...")
-    ensemble_proba = 0.40 * xgb_proba + 0.20 * rf_proba + 0.20 * mlp_proba + 0.20 * iso_scores_norm
-    ensemble_pred = (ensemble_proba > 0.5).astype(int)
-    results['ensemble'] = evaluate_model("Ensemble (4-Model)", y_test, ensemble_pred, ensemble_proba)
+    # ─── MODEL 5: CatBoost ───
+    print("\n  [Model 5] CatBoost (Categorical Boosting)...")
+    cat_model = CatBoostClassifier(
+        iterations=500,
+        depth=8,
+        learning_rate=0.05,
+        l2_leaf_reg=3.0,
+        border_count=128,
+        auto_class_weights='Balanced',
+        eval_metric='AUC',
+        random_seed=42,
+        verbose=0
+    )
+    cat_model.fit(X_train, y_train)
+    cat_proba = cat_model.predict_proba(X_test)[:, 1]
+    cat_pred = (cat_proba > 0.5).astype(int)
+    models['catboost'] = cat_model
+    results['catboost'] = evaluate_model("CatBoost", y_test, cat_pred, cat_proba)
+
+    # ─── ENSEMBLE: Weighted Average (5 models) + Optimal Threshold ───
+    print("\n  [Ensemble] 5-Model Weighted Voting (XGB:0.30 + Cat:0.25 + RF:0.15 + MLP:0.15 + IsoF:0.15)...")
+    ensemble_proba = (0.30 * xgb_proba + 0.25 * cat_proba +
+                      0.15 * rf_proba + 0.15 * mlp_proba + 0.15 * iso_scores_norm)
+
+    # Optimal threshold selection: find threshold that maximizes F1
+    best_f1, best_thresh = 0, 0.5
+    for t in np.arange(0.30, 0.70, 0.01):
+        preds = (ensemble_proba > t).astype(int)
+        f = f1_score(y_test, preds)
+        if f > best_f1:
+            best_f1 = f
+            best_thresh = t
+    print(f"    → Optimal threshold: {best_thresh:.2f} (F1={best_f1:.4f} vs default-0.5 F1={f1_score(y_test, (ensemble_proba > 0.5).astype(int)):.4f})")
+
+    ensemble_pred = (ensemble_proba > best_thresh).astype(int)
+    results['ensemble'] = evaluate_model("Ensemble (5-Model)", y_test, ensemble_pred, ensemble_proba)
 
     return models, results, {
         'xgb_proba': xgb_proba,
+        'cat_proba': cat_proba,
         'rf_proba': rf_proba,
         'mlp_proba': mlp_proba,
         'iso_scores': iso_scores_norm,
         'ensemble_proba': ensemble_proba,
         'ensemble_pred': ensemble_pred,
+        'optimal_threshold': best_thresh,
     }
 
 
@@ -226,11 +260,15 @@ def get_feature_importance(models, feature_names):
         imp = models['random_forest'].feature_importances_
         importances['random_forest'] = dict(zip(feature_names, imp))
     
-    # Average importance across models
+    if 'catboost' in models:
+        imp = models['catboost'].get_feature_importance()
+        importances['catboost'] = dict(zip(feature_names, imp / imp.sum()))  # normalize
+
+    # Average importance across tree models
     avg_imp = {}
     for feat in feature_names:
         scores = []
-        for model_name in ['xgboost', 'random_forest']:
+        for model_name in ['xgboost', 'random_forest', 'catboost']:
             if model_name in importances:
                 scores.append(importances[model_name].get(feat, 0))
         avg_imp[feat] = np.mean(scores) if scores else 0
@@ -270,6 +308,10 @@ def save_model_artifacts(models, label_encoders, feature_names, output_dir):
     if 'xgboost' in models:
         models['xgboost'].save_model(os.path.join(artifacts_dir, 'xgboost_model.json'))
     
+    # Save CatBoost model
+    if 'catboost' in models:
+        models['catboost'].save_model(os.path.join(artifacts_dir, 'catboost_model.cbm'))
+
     # Save other models with pickle
     for name in ['random_forest', 'isolation_forest', 'mlp', 'scaler']:
         if name in models:

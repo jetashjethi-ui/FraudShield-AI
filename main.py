@@ -3,7 +3,7 @@
 ║  FraudShield AI — Adaptive Real-Time Fraud Detection                    ║
 ║  with Explainable Risk Intelligence                                     ║
 ║                                                                          ║
-║  15 Detection Layers | 4-Model Ensemble | Explainable AI              ║
+║  15 Detection Layers | 5-Model Ensemble | Explainable AI              ║
 ║  Financial Services Hackathon — March 13-14, 2026                        ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 """

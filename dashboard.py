@@ -344,7 +344,7 @@ with st.sidebar:
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">ML Models</span>
-                <span style="color:#8b5cf6; font-weight:700;">4</span>
+                <span style="color:#8b5cf6; font-weight:700;">5</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Explainability</span>
@@ -430,23 +430,27 @@ if page == "🏠 Dashboard":
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Ensemble Engine</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 4-Model Voting</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 5-Model Voting</div>
             <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:320px; margin-left:auto; margin-right:auto;">
                 <div style="background:rgba(16,185,255,0.1); border:1px solid rgba(16,185,255,0.2); border-radius:8px; padding:8px; text-align:center;">
                     <div style="color:#10b9ff; font-weight:700; font-size:0.85rem;">XGBoost</div>
-                    <div style="color:#64748b; font-size:0.7rem;">40% weight</div>
+                    <div style="color:#64748b; font-size:0.7rem;">30% weight</div>
+                </div>
+                <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.2); border-radius:8px; padding:8px; text-align:center;">
+                    <div style="color:#ec4899; font-weight:700; font-size:0.85rem;">CatBoost</div>
+                    <div style="color:#64748b; font-size:0.7rem;">25% weight</div>
                 </div>
                 <div style="background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.2); border-radius:8px; padding:8px; text-align:center;">
                     <div style="color:#06d6a0; font-weight:700; font-size:0.85rem;">Random Forest</div>
-                    <div style="color:#64748b; font-size:0.7rem;">20% weight</div>
+                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
                 </div>
                 <div style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px; text-align:center;">
                     <div style="color:#8b5cf6; font-weight:700; font-size:0.85rem;">MLP Neural Net</div>
-                    <div style="color:#64748b; font-size:0.7rem;">20% weight</div>
+                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
                 </div>
                 <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:8px; text-align:center;">
                     <div style="color:#f59e0b; font-weight:700; font-size:0.85rem;">Isolation Forest</div>
-                    <div style="color:#64748b; font-size:0.7rem;">20% weight</div>
+                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
                 </div>
             </div>
         </div>
@@ -625,7 +629,7 @@ elif page == "📊 Models":
     if metrics:
         # Model metric cards
         cols = st.columns(len(metrics))
-        colors = {'xgboost': '#10b9ff', 'random_forest': '#06d6a0', 'isolation_forest': '#f59e0b', 'mlp': '#8b5cf6', 'ensemble': '#ef4444'}
+        colors = {'xgboost': '#10b9ff', 'catboost': '#ec4899', 'random_forest': '#06d6a0', 'isolation_forest': '#f59e0b', 'mlp': '#8b5cf6', 'ensemble': '#ef4444'}
         for col, (name, m) in zip(cols, metrics.items()):
             c = colors.get(name, '#94a3b8')
             col.markdown(f"""

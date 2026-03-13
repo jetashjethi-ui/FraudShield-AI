@@ -1,0 +1,9 @@
+{
+    "venvPath": ".",
+    "pythonPath": "C:\\Users\\jetas\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "reportMissingImports": false,
+    "reportMissingModuleSource": false,
+    "reportGeneralTypeIssues": false,
+    "reportOptionalMemberAccess": false,
+    "typeCheckingMode": "off"
+}
