@@ -1,0 +1,51 @@
+TransactionID,TransactionAmt,isFraud_actual,ml_fraud_probability,risk_score,risk_category,auth_recommendation,explanation
+3111170,149.948,0,0.5146636771008227,66.58567983500893,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 67 | Category: ORANGE_BIOMETRIC
+3238833,117.0,1,0.7152758314490826,62.708113735468515,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 63 | Category: ORANGE_BIOMETRIC
+3418609,86.318,1,0.9963192862700622,75.11756594100139,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 75 | Category: RED_BLOCK
+3318405,28.458,0,0.36400118940323284,54.547891358976344,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 55 | Category: ORANGE_BIOMETRIC
+3522403,19.059,1,0.9834117899796033,74.4662690645064,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 74 | Category: RED_BLOCK
+3424072,16.846,0,0.006030198062238933,52.00932631701863,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3079248,150.0,1,0.9954571188794678,57.974591726792724,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 58 | Category: ORANGE_BIOMETRIC
+3214198,2079.95,0,0.007148523276445711,62.005257723148276,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 62 | Category: ORANGE_BIOMETRIC
+3574644,7.869,1,0.9707520720267162,74.35833415337243,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 74 | Category: RED_BLOCK
+3364927,335.0,1,0.871702589651596,59.23744388970393,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 59 | Category: ORANGE_BIOMETRIC
+3355722,11.842,1,0.9858580367982795,70.72201651457881,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 71 | Category: ORANGE_BIOMETRIC
+3155584,300.0,0,0.7217009655480675,68.23825151908603,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 68 | Category: ORANGE_BIOMETRIC
+3336329,614.0,0,0.006696709216217086,51.74136165451129,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3425217,27.883,1,0.41662495042989167,58.23306887743437,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 58 | Category: ORANGE_BIOMETRIC
+3543525,28.896,0,0.8276098407838854,72.47134198329543,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 72 | Category: RED_BLOCK
+3068658,10.0,0,0.6187146208543124,53.455967262316086,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 53 | Category: ORANGE_BIOMETRIC
+3525448,534.0,0,0.026798345820383394,54.611274760674235,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 55 | Category: ORANGE_BIOMETRIC
+3383057,29.727,1,0.9491714586545158,66.47770246151943,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 66 | Category: ORANGE_BIOMETRIC
+3231875,27.733,1,0.9946869445672832,74.86708866890208,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 75 | Category: RED_BLOCK
+3510706,300.0,1,0.9960312068807496,66.97546880492483,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 67 | Category: ORANGE_BIOMETRIC
+3460249,97.0,1,0.7772662127855774,62.4787279430021,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 62 | Category: ORANGE_BIOMETRIC
+3450324,150.0,0,0.4769095248378347,51.74962949209287,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3079955,400.0,1,0.898949827629696,67.51320684808492,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 68 | Category: ORANGE_BIOMETRIC
+3142205,62.105,1,0.9836828788897347,75.35899025341348,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 75 | Category: RED_BLOCK
+3279603,420.5,0,0.5927783246480205,52.52701328717624,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 53 | Category: ORANGE_BIOMETRIC
+3176781,289.0,0,0.5014551985793205,51.88101038691732,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3469612,6.394,0,0.9903569266885267,82.90169549593999,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 83 | Category: RED_BLOCK
+3024840,59.0,1,0.9835795308842296,66.54578486608048,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,New/unusual device detected - possible SIM swap or account takeover | Device shared across multiple identities - possible mule network | User belongs to high-fraud network community (100% fraud rate)
+3043538,500.0,1,0.9168984928265814,81.96376325999702,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 82 | Category: RED_BLOCK
+3380838,14.017,0,0.47944551386918666,56.885752196376984,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 57 | Category: ORANGE_BIOMETRIC
+3378721,28.76,1,0.9956434477631048,87.0033175921259,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 87 | Category: RED_BLOCK
+3513724,50.783,1,0.7771587279600521,58.669422381538205,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 59 | Category: ORANGE_BIOMETRIC
+3397488,43.805,0,0.9631392544106633,78.26441636687001,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 78 | Category: RED_BLOCK
+3474340,117.0,1,0.603978991914319,53.353636851498145,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 53 | Category: ORANGE_BIOMETRIC
+3370885,117.0,1,0.5718093787291125,53.76292999537783,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 54 | Category: ORANGE_BIOMETRIC
+3549061,15.899,0,0.1153201834660244,54.12128514319395,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 54 | Category: ORANGE_BIOMETRIC
+3258057,108.998,1,0.5548731800808304,64.27292074918759,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 64 | Category: ORANGE_BIOMETRIC
+2989892,103.802,0,0.682711042699322,55.635117378378354,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 56 | Category: ORANGE_BIOMETRIC
+3188072,26.818,1,0.9954622200042552,82.18140875103884,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 82 | Category: RED_BLOCK
+3560111,118.287,1,0.9951608700661752,83.88571598541762,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 84 | Category: RED_BLOCK
+3537114,89.269,0,0.016838024340418256,53.79253903109359,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 54 | Category: ORANGE_BIOMETRIC
+3370803,148.604,0,0.135246224669543,51.84712960731355,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3271607,554.0,0,0.005957159849994194,55.33327423108839,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 55 | Category: ORANGE_BIOMETRIC
+3041291,53.636,0,0.060423239382187896,55.21580882150431,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 55 | Category: ORANGE_BIOMETRIC
+3337918,1900.0,0,0.00810158525614877,62.027153396206,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 62 | Category: ORANGE_BIOMETRIC
+3517794,7.378,0,0.017745149518962687,51.611186900651205,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 52 | Category: ORANGE_BIOMETRIC
+3147800,62.673,1,0.9906861806179079,93.13902698247902,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 93 | Category: RED_BLOCK
+3143981,249.524,1,0.9937194732998085,84.3531714085415,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 84 | Category: RED_BLOCK
+3398078,25.678,1,0.09808934438945788,52.98228265207629,ORANGE_BIOMETRIC,Request biometric re-verification before proceeding.,Risk Score: 53 | Category: ORANGE_BIOMETRIC
+3321567,40.904,1,0.9807833275383367,82.57963816153949,RED_BLOCK,BLOCK transaction. Notify customer. Explain reason. Flag for investigation.,Risk Score: 83 | Category: RED_BLOCK

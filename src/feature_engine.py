@@ -5,12 +5,13 @@ Implements all 15 Detection Layers as engineered features.
 
 import pandas as pd
 import numpy as np
+from src.graph_engine import build_graph_features
 
 
 def build_all_features(df):
-    """Master function: build all 15 layers of features."""
+    """Master function: build all 17 layers of features."""
     print("\n" + "=" * 70)
-    print("FEATURE ENGINEERING — 15 DETECTION LAYERS")
+    print("FEATURE ENGINEERING -- 17 DETECTION LAYERS")
     print("=" * 70)
 
     df = amount_features(df)          # Layer 1, 9
@@ -25,9 +26,11 @@ def build_all_features(df):
     df = round_amount_features(df)    # Layer 9
     df = category_mismatch(df)        # Layer 10
     df = new_account_features(df)     # Layer 11
-    df = velocity_features(df)        # Layer 12 — NEW
-    df = email_risk_features(df)      # Layer 13 — NEW
-    df = network_features(df)         # Layer 14 — NEW
+    df = velocity_features(df)        # Layer 12
+    df = email_risk_features(df)      # Layer 13
+    df = network_features(df)         # Layer 14
+    df = build_graph_features(df)     # Layer 16 -- GRAPH ANALYSIS
+    df = target_encoding(df)          # Layer 17 -- TARGET ENCODING
     df = interaction_features(df)     # Cross-layer combos (expanded)
     df = missing_indicators(df)       # Missingness as signal
 
@@ -445,11 +448,50 @@ def interaction_features(df):
     df['fraud_neighbor_x_night'] = df.get('has_fraud_neighbor', pd.Series(0, index=df.index)) * df['is_night']
     df['shared_device_x_network'] = df['is_shared_device'] * (df.get('users_per_address', pd.Series(1, index=df.index)) > 5).astype(int)
 
-    print(f"    → 13 interaction features created")
+    # Graph-layer interactions (Layer 16 combos)
+    df['graph_fraud_comm_x_night'] = df.get('graph_community_fraud_rate', pd.Series(0, index=df.index)) * df['is_night']
+    df['graph_fraud_comm_x_high_amt'] = df.get('graph_community_fraud_rate', pd.Series(0, index=df.index)) * (df['TransactionAmt'] > 500).astype(int)
+    df['graph_bridge_x_unusual_device'] = df.get('graph_is_bridge', pd.Series(0, index=df.index)) * df['is_unusual_device']
+    df['graph_fraud_neighbor_x_round'] = df.get('graph_fraud_neighbor_ratio', pd.Series(0, index=df.index)) * df['is_suspicious_round']
+
+    print(f"    -> 17 interaction features created")
     return df
 
 
-# ─── MISSING VALUE INDICATORS ────────────────────────────────────────
+# --- TARGET ENCODING (Layer 17) ------------------------------------------
+def target_encoding(df):
+    """Smoothed target encoding for high-cardinality categorical features."""
+    print("  [Layer 17] Target Encoding (Smoothed)...")
+
+    if 'isFraud' not in df.columns:
+        print("    -> isFraud column not found, skipping")
+        return df
+
+    global_mean = df['isFraud'].mean()
+    smooth_weight = 50  # Smoothing factor to prevent overfitting
+
+    target_cols = ['card1', 'card2', 'addr1', 'addr2', 'P_emaildomain']
+    encoded_count = 0
+
+    for col in target_cols:
+        if col not in df.columns:
+            continue
+
+        # Compute per-category stats
+        stats = df.groupby(col)['isFraud'].agg(['mean', 'count'])
+        # Smoothed target encoding: (count * mean + smooth * global) / (count + smooth)
+        stats['te'] = (stats['count'] * stats['mean'] + smooth_weight * global_mean) / \
+                       (stats['count'] + smooth_weight)
+
+        new_col = f'{col}_target_enc'
+        df[new_col] = df[col].map(stats['te']).fillna(global_mean)
+        encoded_count += 1
+
+    print(f"    -> {encoded_count} target-encoded features created")
+    return df
+
+
+# --- MISSING VALUE INDICATORS ---------------------------------------------
 def missing_indicators(df):
     """Missingness itself is a fraud signal."""
     print("  [Bonus] Missing Value Indicators...")
@@ -458,5 +500,5 @@ def missing_indicators(df):
         if col in df.columns:
             df[f'is_missing_{col}'] = df[col].isnull().astype(int)
 
-    print(f"    → Missing indicators for card2, addr1, dist1, P_emaildomain")
+    print(f"    -> Missing indicators for card2, addr1, dist1, P_emaildomain")
     return df

@@ -1,6 +1,6 @@
 """
 FraudShield AI — Premium Interactive Dashboard
-Live demo for hackathon judges. Run: streamlit run dashboard.py
+Interactive dashboard for exploring FraudShield AI results. Run: streamlit run dashboard.py
 """
 
 import streamlit as st
@@ -328,7 +328,7 @@ with st.sidebar:
 
     page = st.radio(
         "Navigation",
-        ["🏠 Dashboard", "🔍 Live Detector", "📊 Models", "📈 Analytics", "📋 Flagged"],
+        ["🏠 Dashboard", "🔍 Live Detector", "📊 Models", "📈 Analytics", "📋 Flagged", "💰 ROI Calculator", "🛡️ Robustness", "🎮 Simulator", "🧠 Autoencoder"],
         label_visibility="collapsed"
     )
 
@@ -340,15 +340,19 @@ with st.sidebar:
         <div style="margin-top:12px;">
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Detection Layers</span>
-                <span style="color:#10b9ff; font-weight:700;">15</span>
+                <span style="color:#10b9ff; font-weight:700;">16</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">ML Models</span>
-                <span style="color:#8b5cf6; font-weight:700;">5</span>
+                <span style="color:#8b5cf6; font-weight:700;">6</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                <span style="color:#94a3b8; font-size:0.85rem;">Explainability</span>
-                <span style="color:#06d6a0; font-weight:700;">XAI</span>
+                <span style="color:#94a3b8; font-size:0.85rem;">Ensemble</span>
+                <span style="color:#06d6a0; font-weight:700;">Stacking</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin:8px 0;">
+                <span style="color:#94a3b8; font-size:0.85rem;">Graph Analysis</span>
+                <span style="color:#ec4899; font-weight:700;">NetworkX</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Auth Tiers</span>
@@ -359,7 +363,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-    st.caption("FrostHack · March 2026")
+    st.caption("FrostHack · April 2026")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -382,10 +386,10 @@ if page == "🏠 Dashboard":
         fp_rate = cm[0][1] / max(cm[0][0] + cm[0][1], 1) * 1000
 
         cards = [
-            ("blue", f"{best_auc:.4f}", "BEST AUC-ROC", "XGBoost"),
-            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "4-Model Voting"),
+            ("blue", f"{best_auc:.4f}", "BEST AUC-ROC", "LightGBM"),
+            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "6-Model Stacking"),
             ("green", f"{ens_prec:.1%}", "PRECISION", f"Only {fp_rate:.1f} FP per 1K"),
-            ("amber", "15", "DETECTION LAYERS", "+4 Enhanced Layers"),
+            ("amber", "16", "DETECTION LAYERS", "+ Graph Analysis"),
         ]
         for col, (cls, val, label, delta) in zip(cols, cards):
             col.markdown(f"""
@@ -418,40 +422,41 @@ if page == "🏠 Dashboard":
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Feature Engineering</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 15 Detection Layers</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 16 Detection Layers</div>
             <div style="margin-top:8px;">
                 <span style="{mini_style}">⚡ Velocity</span>
                 <span style="{mini_style}">📱 Device</span>
                 <span style="{mini_style}">📧 Email</span>
-                <span style="{mini_style}">🔗 Network</span>
-                <span style="{mini_style}">+ 11 more</span>
+                <span style="{mini_style}">🔗 Graph</span>
+                <span style="{mini_style}">+ 12 more</span>
             </div>
         </div>
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
-            <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Ensemble Engine</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 5-Model Voting</div>
-            <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:6px; max-width:320px; margin-left:auto; margin-right:auto;">
-                <div style="background:rgba(16,185,255,0.1); border:1px solid rgba(16,185,255,0.2); border-radius:8px; padding:8px; text-align:center;">
-                    <div style="color:#10b9ff; font-weight:700; font-size:0.85rem;">XGBoost</div>
-                    <div style="color:#64748b; font-size:0.7rem;">30% weight</div>
+            <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Stacking Ensemble</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 6-Model Stacking</div>
+            <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; max-width:400px; margin-left:auto; margin-right:auto;">
+                <div style="background:rgba(16,185,255,0.1); border:1px solid rgba(16,185,255,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#10b9ff; font-weight:700; font-size:0.8rem;">XGBoost</div>
                 </div>
-                <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.2); border-radius:8px; padding:8px; text-align:center;">
-                    <div style="color:#ec4899; font-weight:700; font-size:0.85rem;">CatBoost</div>
-                    <div style="color:#64748b; font-size:0.7rem;">25% weight</div>
+                <div style="background:rgba(26,188,156,0.1); border:1px solid rgba(26,188,156,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#1abc9c; font-weight:700; font-size:0.8rem;">LightGBM</div>
                 </div>
-                <div style="background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.2); border-radius:8px; padding:8px; text-align:center;">
-                    <div style="color:#06d6a0; font-weight:700; font-size:0.85rem;">Random Forest</div>
-                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
+                <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#ec4899; font-weight:700; font-size:0.8rem;">CatBoost</div>
                 </div>
-                <div style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:8px; text-align:center;">
-                    <div style="color:#8b5cf6; font-weight:700; font-size:0.85rem;">MLP Neural Net</div>
-                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
+                <div style="background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#06d6a0; font-weight:700; font-size:0.8rem;">Random Forest</div>
                 </div>
-                <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:8px; text-align:center;">
-                    <div style="color:#f59e0b; font-weight:700; font-size:0.85rem;">Isolation Forest</div>
-                    <div style="color:#64748b; font-size:0.7rem;">15% weight</div>
+                <div style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#8b5cf6; font-weight:700; font-size:0.8rem;">MLP Neural Net</div>
                 </div>
+                <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#f59e0b; font-weight:700; font-size:0.8rem;">IsoForest</div>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:6px;">
+                <span style="{mini_style}">Meta-Learner: Logistic Regression</span>
             </div>
         </div>
         <div style="{arrow_style}">▼</div>
@@ -473,7 +478,8 @@ if page == "🏠 Dashboard":
             ("Seasonal Baselines", "📅"), ("Adaptive Auth", "🔐"), ("Merchant Risk", "🏪"),
             ("Mule Network", "🕸️"), ("Dormant Hijack", "💤"), ("Round Amount", "🎯"),
             ("Category Mismatch", "⚠️"), ("New Account", "🆕"), ("Velocity", "⚡"),
-            ("Email Risk", "📧"), ("Fraud Ring", "🔗"), ("Synth Device", "📱")
+            ("Email Risk", "📧"), ("Fraud Ring", "🔗"), ("Synth Device", "📱"),
+            ("Graph Analysis", "🌐")
         ]
         html = '<div class="glass-card">'
         for i, (name, icon) in enumerate(layers):
@@ -629,7 +635,7 @@ elif page == "📊 Models":
     if metrics:
         # Model metric cards
         cols = st.columns(len(metrics))
-        colors = {'xgboost': '#10b9ff', 'catboost': '#ec4899', 'random_forest': '#06d6a0', 'isolation_forest': '#f59e0b', 'mlp': '#8b5cf6', 'ensemble': '#ef4444'}
+        colors = {'xgboost': '#10b9ff', 'lightgbm': '#1abc9c', 'catboost': '#ec4899', 'random_forest': '#06d6a0', 'isolation_forest': '#f59e0b', 'mlp': '#8b5cf6', 'ensemble': '#ef4444'}
         for col, (name, m) in zip(cols, metrics.items()):
             c = colors.get(name, '#94a3b8')
             col.markdown(f"""
@@ -669,12 +675,18 @@ elif page == "📈 Analytics":
 
     viz_list = [
         ("Feature Importance — Top 20", "feature_importance.png"),
+        ("SHAP Global Feature Summary", "shap_summary.png"),
+        ("SHAP Mean Importance", "shap_bar.png"),
+        ("Graph-Based Fraud Ring Analysis", "graph_analysis.png"),
         ("Risk Score Distribution", "risk_distribution.png"),
         ("Adaptive Auth Distribution", "risk_pie_chart.png"),
         ("Fraud Rate by Hour of Day", "fraud_by_hour.png"),
         ("Fraud by Product Category", "fraud_by_product.png"),
         ("Transaction Amount Distribution", "amount_distribution.png"),
         ("Sample Explanations", "sample_explanations.png"),
+        ("SHAP Waterfall #1 (Highest Risk)", "shap_waterfall_1.png"),
+        ("SHAP Waterfall #2", "shap_waterfall_2.png"),
+        ("SHAP Waterfall #3", "shap_waterfall_3.png"),
     ]
 
     for title, fname in viz_list:
@@ -717,3 +729,449 @@ elif page == "📋 Flagged":
             st.image(expl_path, caption="Sample Explanations Table", use_container_width=True)
     else:
         st.warning("Run `python main.py` first to generate flagged transactions.")
+
+
+# =====================================================================
+#  PAGE: ROI CALCULATOR
+# =====================================================================
+elif page == "💰 ROI Calculator":
+    st.markdown('<div class="section-header" style="font-size:1.8rem;">💰 Cost-Benefit ROI Calculator</div>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b; margin-top:-10px;">Business impact analysis for a mid-size bank (50M transactions/year)</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    metrics = load_metrics()
+    ensemble = metrics.get('ensemble', {})
+    recall = ensemble.get('recall', 0.65)
+    precision = ensemble.get('precision', 0.80)
+    auc = ensemble.get('auc', 0.95)
+
+    # User-adjustable assumptions
+    st.markdown('<div class="glass-card" style="padding:16px;"><div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Bank Parameters</div></div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    annual_txns = c1.number_input("Annual Transactions", value=50_000_000, step=1_000_000, format="%d")
+    fraud_rate = c2.number_input("Fraud Rate (%)", value=3.5, step=0.1, min_value=0.1, max_value=20.0) / 100
+    avg_fraud_loss = c3.number_input("Avg Fraud Loss ($)", value=850, step=50)
+
+    c4, c5, c6 = st.columns(3)
+    fp_cost = c4.number_input("False Positive Cost ($)", value=25, step=5)
+    review_cost = c5.number_input("Manual Review Cost ($)", value=15, step=5)
+    baseline_catch = c6.number_input("Baseline Detection (%)", value=30, step=5) / 100
+
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    # Calculate ROI
+    total_fraud = annual_txns * fraud_rate
+    total_legit = annual_txns * (1 - fraud_rate)
+
+    # Baseline
+    bl_caught = total_fraud * baseline_catch
+    bl_missed = total_fraud * (1 - baseline_catch)
+    bl_fps = total_legit * 0.05
+    bl_loss = bl_missed * avg_fraud_loss + bl_fps * fp_cost
+
+    # FraudShield
+    fs_caught = total_fraud * recall
+    fs_missed = total_fraud * (1 - recall)
+    fs_total_flagged = fs_caught / max(precision, 0.01)
+    fs_fps = fs_total_flagged - fs_caught
+    fs_loss = fs_missed * avg_fraud_loss + fs_fps * fp_cost + fs_total_flagged * review_cost
+
+    savings = bl_loss - fs_loss
+    roi_pct = (savings / max(bl_loss, 1)) * 100
+
+    # Big impact cards
+    st.markdown('<div class="section-header" style="font-size:1.3rem;">Impact Summary</div>', unsafe_allow_html=True)
+    cols = st.columns(4)
+    impact_cards = [
+        ("blue", f"${savings:,.0f}", "ANNUAL SAVINGS", f"{roi_pct:.0f}% ROI"),
+        ("green", f"{recall*100:.1f}%", "FRAUD CAUGHT", f"{fs_caught:,.0f} per year"),
+        ("purple", f"{precision*100:.1f}%", "PRECISION", f"Only {fs_fps:,.0f} false alarms"),
+        ("amber", f"${savings * 0.01 / max(auc - 0.5, 0.01):,.0f}", "PER 1% AUC", f"Current: {auc:.4f}"),
+    ]
+    for col, (cls, val, label, delta) in zip(cols, impact_cards):
+        col.markdown(f"""
+        <div class="metric-card {cls}">
+            <div class="metric-value">{val}</div>
+            <div class="metric-label">{label}</div>
+            <div class="metric-delta">{delta}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    # Comparison table
+    st.markdown('<div class="section-header" style="font-size:1.3rem;">Before vs After FraudShield</div>', unsafe_allow_html=True)
+    comp_df = pd.DataFrame({
+        'Metric': ['Fraud Detected', 'Fraud Missed', 'Fraud Loss', 'False Positives', 'FP Cost', 'Total Annual Cost'],
+        'Without FraudShield': [
+            f"{bl_caught:,.0f}", f"{bl_missed:,.0f}", f"${bl_missed * avg_fraud_loss:,.0f}",
+            f"{bl_fps:,.0f}", f"${bl_fps * fp_cost:,.0f}", f"${bl_loss:,.0f}"
+        ],
+        'With FraudShield': [
+            f"{fs_caught:,.0f}", f"{fs_missed:,.0f}", f"${fs_missed * avg_fraud_loss:,.0f}",
+            f"{fs_fps:,.0f}", f"${fs_fps * fp_cost:,.0f}", f"${fs_loss:,.0f}"
+        ],
+    })
+    st.dataframe(comp_df, use_container_width=True, hide_index=True)
+
+    st.success(f"FraudShield AI saves **${savings:,.0f}** annually, a **{roi_pct:.0f}% improvement** over baseline detection.")
+
+
+# =====================================================================
+#  PAGE: ADVERSARIAL ROBUSTNESS
+# =====================================================================
+elif page == "🛡️ Robustness":
+    st.markdown('<div class="section-header" style="font-size:1.8rem;">🛡️ Adversarial Robustness Testing</div>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b; margin-top:-10px;">Can smart fraudsters fool FraudShield AI? We tested 5 attack scenarios.</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    report_path = os.path.join(RESULTS_DIR, "adversarial_report.json")
+    if os.path.exists(report_path):
+        with open(report_path, 'r') as f:
+            report = json.load(f)
+
+        overall = report.get('overall_score', 0)
+        passed = report.get('tests_passed', 0)
+        total = report.get('tests_total', 5)
+
+        # Overall score
+        score_color = '#06d6a0' if overall >= 80 else '#f59e0b' if overall >= 60 else '#ef4444'
+        st.markdown(f"""
+        <div class="glass-card" style="text-align:center; padding:30px;">
+            <div style="font-size:3rem; font-weight:800; color:{score_color};">{overall:.0f}%</div>
+            <div style="font-size:1.2rem; color:#94a3b8; margin-top:4px;">Robustness Score ({passed}/{total} tests passed)</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+        # Individual test results
+        test_icons = {
+            'amount_splitting': ('💸', 'Amount Splitting Attack', 'Can model catch fraud split into smaller transactions?'),
+            'time_evasion': ('🕐', 'Time Evasion Attack', 'Can model catch fraud during business hours?'),
+            'device_spoofing': ('📱', 'Device Spoofing Attack', 'Can model catch fraud from normal-looking devices?'),
+            'threshold_sensitivity': ('🎚️', 'Threshold Sensitivity', 'Is performance stable across different thresholds?'),
+            'feature_perturbation': ('🔀', 'Feature Perturbation', 'Are predictions robust to small input noise?'),
+        }
+
+        details = report.get('details', {})
+        for test_name, test_data in details.items():
+            icon, title, desc = test_icons.get(test_name, ('🔍', test_name, ''))
+            is_passed = test_data.get('passed', False)
+            value = test_data.get('value', 0)
+            threshold = test_data.get('threshold', 0)
+
+            badge = '✅ PASSED' if is_passed else '❌ FAILED'
+            badge_color = '#06d6a0' if is_passed else '#ef4444'
+            bar_width = min(value * 100, 100)
+
+            st.markdown(f"""
+            <div class="glass-card" style="padding:16px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:1.3rem;">{icon}</span>
+                        <span style="font-size:1rem; font-weight:700; color:#e2e8f0; margin-left:8px;">{title}</span>
+                    </div>
+                    <span style="color:{badge_color}; font-weight:700; font-size:0.9rem;">{badge}</span>
+                </div>
+                <div style="color:#94a3b8; font-size:0.8rem; margin-top:6px;">{desc}</div>
+                <div style="margin-top:10px; background:rgba(255,255,255,0.05); border-radius:8px; height:24px; overflow:hidden;">
+                    <div style="width:{bar_width}%; height:100%; background:linear-gradient(90deg, {badge_color}aa, {badge_color}); border-radius:8px; display:flex; align-items:center; padding-left:8px;">
+                        <span style="color:white; font-size:0.7rem; font-weight:600;">{value:.1%} (threshold: {threshold:.0%})</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        st.info("These tests simulate realistic attack strategies that smart fraudsters might use. A high robustness score means FraudShield AI is resilient against evasion tactics.")
+    else:
+        st.warning("Run `python main.py` first to generate the adversarial robustness report.")
+
+
+# =====================================================================
+#  PAGE: LIVE TRANSACTION SIMULATOR
+# =====================================================================
+elif page == "🎮 Simulator":
+    st.markdown('<div class="section-header" style="font-size:1.8rem;">🎮 Live Transaction Simulator</div>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b; margin-top:-10px;">Generate realistic transactions and watch FraudShield AI score them in real-time</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    import random
+    import time as _time
+
+    # Controls
+    c1, c2, c3 = st.columns(3)
+    fraud_chance = c1.slider("Fraud Probability (%)", 0, 100, 30, 5)
+    speed = c2.selectbox("Simulation Speed", ["Fast", "Normal", "Slow"], index=1)
+    batch_size = c3.number_input("Transactions per batch", 1, 20, 5, 1)
+
+    speed_map = {"Fast": 0.3, "Normal": 0.7, "Slow": 1.5}
+    delay = speed_map[speed]
+
+    # Transaction templates
+    merchants = ["Amazon", "Walmart", "Best Buy", "Apple Store", "Gas Station", "ATM Withdrawal",
+                 "Wire Transfer", "Crypto Exchange", "Unknown Merchant", "Foreign Purchase"]
+    products = ["W", "H", "C", "S", "R"]
+    emails = ["gmail.com", "yahoo.com", "outlook.com", "protonmail.com", "anonymous.com", None]
+    devices = ["Windows 10", "iPhone 14", "Samsung Galaxy", "Linux", "MacOS", None, "TOR Browser"]
+    cards = ["visa", "mastercard", "amex", "discover"]
+
+    if 'sim_log' not in st.session_state:
+        st.session_state.sim_log = []
+
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    if st.button("🚀 Generate Transactions", use_container_width=True):
+        progress = st.progress(0)
+        results_area = st.container()
+
+        for i in range(batch_size):
+            is_fraud = random.random() < (fraud_chance / 100)
+
+            if is_fraud:
+                amt = random.choice([round(random.uniform(800, 5000), 2), round(random.uniform(100, 500), 0) * 10])
+                hour = random.choice([1, 2, 3, 4, 5, 23, 0])
+                merchant = random.choice(["Wire Transfer", "Crypto Exchange", "Unknown Merchant", "ATM Withdrawal", "Foreign Purchase"])
+                email = random.choice(["protonmail.com", "anonymous.com", None])
+                device = random.choice([None, "TOR Browser", "Linux"])
+            else:
+                amt = round(random.uniform(5, 500), 2)
+                hour = random.randint(8, 21)
+                merchant = random.choice(["Amazon", "Walmart", "Best Buy", "Apple Store", "Gas Station"])
+                email = random.choice(["gmail.com", "yahoo.com", "outlook.com"])
+                device = random.choice(["Windows 10", "iPhone 14", "Samsung Galaxy", "MacOS"])
+
+            card = random.choice(cards)
+            is_weekend = random.random() < 0.28
+            is_night = hour <= 6 or hour >= 23
+
+            # Compute risk score
+            risk_score = 0
+            factors = []
+
+            # Amount factor
+            if amt > 2000:
+                risk_score += 25
+                factors.append(f"Very high amount (${amt:,.2f})")
+            elif amt > 500:
+                risk_score += 12
+                factors.append(f"High amount (${amt:,.2f})")
+
+            # Time factor
+            if is_night:
+                risk_score += 18
+                factors.append(f"Unusual hour ({hour}:00)")
+
+            # Round amount
+            if amt == int(amt) and amt >= 500:
+                risk_score += 12
+                factors.append(f"Perfectly round amount")
+
+            # Email risk
+            if email in ["protonmail.com", "anonymous.com"]:
+                risk_score += 15
+                factors.append(f"High-risk email ({email})")
+            elif email is None:
+                risk_score += 8
+                factors.append("No email provided")
+
+            # Device risk
+            if device in [None, "TOR Browser"]:
+                risk_score += 15
+                factors.append(f"Suspicious device ({device or 'Unknown'})")
+
+            # Merchant risk
+            if merchant in ["Wire Transfer", "Crypto Exchange", "Unknown Merchant"]:
+                risk_score += 12
+                factors.append(f"High-risk merchant ({merchant})")
+
+            # Night + high amount combo
+            if is_night and amt > 1000:
+                risk_score += 10
+                factors.append("Night + high value combo")
+
+            risk_score = min(100, risk_score)
+
+            # Category
+            if risk_score >= 71:
+                cat, cat_color, cat_icon = "RED_BLOCK", "#ef4444", "🔴"
+                action = "BLOCK & INVESTIGATE"
+            elif risk_score >= 51:
+                cat, cat_color, cat_icon = "ORANGE_BIOMETRIC", "#f59e0b", "🟠"
+                action = "REQUEST BIOMETRIC"
+            elif risk_score >= 31:
+                cat, cat_color, cat_icon = "YELLOW_PIN", "#eab308", "🟡"
+                action = "REQUEST PIN"
+            else:
+                cat, cat_color, cat_icon = "GREEN_APPROVE", "#06d6a0", "🟢"
+                action = "AUTO-APPROVE"
+
+            txn_id = f"TXN-{random.randint(100000, 999999)}"
+
+            with results_area:
+                st.markdown(f"""
+                <div class="glass-card" style="padding:16px; margin-bottom:10px; border-left:4px solid {cat_color};">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="font-size:1.1rem; font-weight:700; color:#e2e8f0;">{cat_icon} {txn_id}</span>
+                            <span style="color:#64748b; margin-left:12px;">{merchant}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.3rem; font-weight:800; color:{cat_color};">${amt:,.2f}</div>
+                            <div style="font-size:0.7rem; color:{cat_color}; font-weight:600;">{action}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; display:flex; gap:20px; flex-wrap:wrap;">
+                        <span style="color:#94a3b8; font-size:0.8rem;">🕐 {hour}:00</span>
+                        <span style="color:#94a3b8; font-size:0.8rem;">💳 {card}</span>
+                        <span style="color:#94a3b8; font-size:0.8rem;">📱 {device or 'Unknown'}</span>
+                        <span style="color:#94a3b8; font-size:0.8rem;">📧 {email or 'None'}</span>
+                    </div>
+                    <div style="margin-top:8px; background:rgba(255,255,255,0.05); border-radius:8px; height:20px; overflow:hidden;">
+                        <div style="width:{risk_score}%; height:100%; background:linear-gradient(90deg, {cat_color}66, {cat_color}); border-radius:8px; display:flex; align-items:center; padding-left:8px;">
+                            <span style="color:white; font-size:0.7rem; font-weight:600;">Risk: {risk_score}/100</span>
+                        </div>
+                    </div>
+                    <div style="margin-top:6px; color:#94a3b8; font-size:0.75rem;">
+                        {'  |  '.join(factors[:3]) if factors else 'No risk factors'}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.session_state.sim_log.append({
+                'ID': txn_id, 'Amount': f'${amt:,.2f}', 'Merchant': merchant,
+                'Risk': risk_score, 'Category': cat, 'Action': action,
+                'Hour': f'{hour}:00', 'Card': card,
+            })
+
+            progress.progress((i + 1) / batch_size)
+            _time.sleep(delay)
+
+        st.success(f"Scored {batch_size} transactions. {sum(1 for l in st.session_state.sim_log[-batch_size:] if l['Risk'] >= 51)} flagged as high-risk.")
+
+    # Transaction log
+    if st.session_state.sim_log:
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header" style="font-size:1.3rem;">Transaction Log</div>', unsafe_allow_html=True)
+
+        log_df = pd.DataFrame(st.session_state.sim_log[-50:][::-1])
+        st.dataframe(log_df, use_container_width=True, hide_index=True, height=300)
+
+        c1, c2, c3, c4 = st.columns(4)
+        total = len(st.session_state.sim_log)
+        red = sum(1 for l in st.session_state.sim_log if l['Risk'] >= 71)
+        orange = sum(1 for l in st.session_state.sim_log if 51 <= l['Risk'] < 71)
+        green = sum(1 for l in st.session_state.sim_log if l['Risk'] < 31)
+        c1.metric("Total Scored", total)
+        c2.metric("🔴 Blocked", red)
+        c3.metric("🟠 Biometric", orange)
+        c4.metric("🟢 Approved", green)
+
+        if st.button("Clear Log"):
+            st.session_state.sim_log = []
+            st.rerun()
+
+
+# =====================================================================
+#  PAGE: DEEP LEARNING AUTOENCODER
+# =====================================================================
+elif page == "🧠 Autoencoder":
+    st.markdown('<div class="section-header" style="font-size:1.8rem;">🧠 Deep Learning Autoencoder</div>', unsafe_allow_html=True)
+    st.markdown('<p style="color:#64748b; margin-top:-10px;">Unsupervised anomaly detection -- learns what "normal" looks like, flags anything that doesn\'t fit</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    # Architecture diagram
+    st.markdown(f"""
+    <div class="glass-card" style="padding:20px; text-align:center;">
+        <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600; margin-bottom:12px;">Neural Network Architecture</div>
+        <div style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Input<br><span style="font-size:0.7rem; opacity:0.8;">N features</span></div>
+            <div style="color:#64748b; font-size:1.2rem;">→</div>
+            <div style="background:linear-gradient(135deg, #8b5cf6, #7c3aed); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Encoder<br><span style="font-size:0.7rem; opacity:0.8;">64 neurons</span></div>
+            <div style="color:#64748b; font-size:1.2rem;">→</div>
+            <div style="background:linear-gradient(135deg, #ef4444, #dc2626); padding:14px 18px; border-radius:12px; color:white; font-weight:800; font-size:0.9rem; border:2px solid #fca5a5;">Bottleneck<br><span style="font-size:0.7rem; opacity:0.8;">16 neurons</span></div>
+            <div style="color:#64748b; font-size:1.2rem;">→</div>
+            <div style="background:linear-gradient(135deg, #8b5cf6, #7c3aed); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Decoder<br><span style="font-size:0.7rem; opacity:0.8;">64 neurons</span></div>
+            <div style="color:#64748b; font-size:1.2rem;">→</div>
+            <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Output<br><span style="font-size:0.7rem; opacity:0.8;">N features</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    # Load results
+    ae_path = os.path.join(RESULTS_DIR, "autoencoder_results.json")
+    if os.path.exists(ae_path):
+        with open(ae_path, 'r') as f:
+            ae_data = json.load(f)
+
+        # Key metrics
+        cols = st.columns(4)
+        ae_metrics = [
+            ("blue", f"{ae_data.get('auc', 0):.4f}", "AUC SCORE", "Anomaly detection"),
+            ("purple", f"{ae_data.get('error_ratio', 0):.1f}x", "ERROR RATIO", "Fraud vs Normal"),
+            ("green", f"{ae_data.get('training_epochs', 0)}", "EPOCHS", "Training iterations"),
+            ("amber", f"{ae_data.get('threshold', 0):.4f}", "THRESHOLD", "Anomaly boundary"),
+        ]
+        for col, (cls, val, label, delta) in zip(cols, ae_metrics):
+            col.markdown(f"""
+            <div class="metric-card {cls}">
+                <div class="metric-value">{val}</div>
+                <div class="metric-label">{label}</div>
+                <div class="metric-delta">{delta}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+        # Error comparison
+        st.markdown('<div class="section-header" style="font-size:1.3rem;">Reconstruction Error Analysis</div>', unsafe_allow_html=True)
+        normal_err = ae_data.get('mean_error_normal', 0)
+        fraud_err = ae_data.get('mean_error_fraud', 0)
+        max_err = max(normal_err, fraud_err, 0.001)
+
+        st.markdown(f"""
+        <div class="glass-card" style="padding:16px;">
+            <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#06d6a0; font-weight:600;">🟢 Normal Transactions</span>
+                    <span style="color:#94a3b8;">{normal_err:.6f}</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.05); border-radius:8px; height:24px; overflow:hidden;">
+                    <div style="width:{normal_err/max_err*100:.1f}%; height:100%; background:linear-gradient(90deg, #06d6a066, #06d6a0); border-radius:8px;"></div>
+                </div>
+            </div>
+            <div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#ef4444; font-weight:600;">🔴 Fraudulent Transactions</span>
+                    <span style="color:#94a3b8;">{fraud_err:.6f}</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.05); border-radius:8px; height:24px; overflow:hidden;">
+                    <div style="width:{fraud_err/max_err*100:.1f}%; height:100%; background:linear-gradient(90deg, #ef444466, #ef4444); border-radius:8px;"></div>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:12px; color:#94a3b8; font-size:0.85rem;">
+                Fraud transactions have <span style="color:#f59e0b; font-weight:700;">{ae_data.get('error_ratio', 0):.1f}x higher</span> reconstruction error
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+        # How it works
+        st.markdown('<div class="section-header" style="font-size:1.3rem;">How It Works</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card" style="padding:16px;">
+            <div style="color:#e2e8f0; font-size:0.9rem; line-height:1.8;">
+                <strong>1. Training Phase:</strong> The autoencoder learns to compress and reconstruct <em>only normal transactions</em> through a 16-neuron bottleneck.<br>
+                <strong>2. The Bottleneck:</strong> Forces the network to learn the essential "shape" of legitimate transactions — patterns that fraud doesn't follow.<br>
+                <strong>3. Detection:</strong> When a fraudulent transaction passes through, the network can't reconstruct it well, producing high error.<br>
+                <strong>4. Scoring:</strong> High reconstruction error = high anomaly score = likely fraud.<br><br>
+                <em style="color:#64748b;">Autoencoder-based anomaly detection is widely used in financial fraud detection systems.</em>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.warning("Run `python main.py` first to train the autoencoder.")

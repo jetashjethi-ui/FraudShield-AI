@@ -1,0 +1,42 @@
+{
+  "overall_score": 100.0,
+  "tests_passed": 5,
+  "tests_total": 5,
+  "details": {
+    "amount_splitting": {
+      "passed": "True",
+      "description": "Can model detect fraud when amounts are split into smaller transactions?",
+      "metric": "low_amount_fraud_catch_rate",
+      "value": 0.6571,
+      "threshold": 0.4
+    },
+    "time_evasion": {
+      "passed": "True",
+      "description": "Can model detect fraud during business hours (time evasion)?",
+      "metric": "daytime_fraud_catch_rate",
+      "value": 0.6052,
+      "threshold": 0.4
+    },
+    "device_spoofing": {
+      "passed": "True",
+      "description": "Can model detect fraud from normal-looking devices (device spoofing)?",
+      "metric": "normal_device_fraud_catch_rate",
+      "value": 0.6466,
+      "threshold": 0.35
+    },
+    "threshold_sensitivity": {
+      "passed": true,
+      "description": "Is model performance stable across different decision thresholds?",
+      "metric": "threshold_stability",
+      "value": 0.9916,
+      "threshold": 0.7
+    },
+    "feature_perturbation": {
+      "passed": "True",
+      "description": "Are predictions confident enough to resist small feature perturbations?",
+      "metric": "prediction_confidence_rate",
+      "value": 0.9572,
+      "threshold": 0.6
+    }
+  }
+}

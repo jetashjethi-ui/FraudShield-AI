@@ -1,6 +1,7 @@
 """
-FraudShield AI — Risk Scoring & Explainability Engine
+FraudShield AI — Risk Scoring & Explainability Engine (v2)
 Layers 1 (XAI) and 5 (Adaptive Auth) implementation.
+Now includes graph features and SHAP-ready structure.
 """
 
 import pandas as pd
@@ -9,33 +10,38 @@ import numpy as np
 
 def compute_risk_scores(df, predictions):
     """
-    Compute weighted risk scores (0-100) using all 11 layer signals.
+    Compute weighted risk scores (0-100) using all layer signals.
     Layer 5: Adaptive Step-Up Authentication.
     """
     print("\n" + "=" * 70)
     print("RISK SCORING ENGINE")
     print("=" * 70)
 
-    # Extract signals (ensure they exist with defaults)
     ml_proba = predictions.get('ensemble_proba', np.zeros(len(df)))
     iso_scores = predictions.get('iso_scores', np.zeros(len(df)))
 
     def safe_col(col, default=0):
         return df[col].fillna(default).values if col in df.columns else np.full(len(df), default)
 
-    # Weighted risk formula
+    # Weighted risk formula — now includes graph features
     risk_raw = (
-        ml_proba * 35 +                                        # ML ensemble probability
-        iso_scores * 20 +                                       # Isolation Forest anomaly
-        safe_col('is_unusual_device') * 10 +                    # SIM swap (Layer 3)
-        safe_col('is_shared_device') * 7 +                      # Mule network (Layer 7)
-        safe_col('is_low_activity_user') * 5 +                  # Dormant account (Layer 8)
-        safe_col('first_txn_high_value') * 8 +                  # New account abuse (Layer 11)
-        safe_col('is_suspicious_round') * 5 +                   # Round amount (Layer 9)
-        safe_col('is_night') * np.clip(safe_col('amount_zscore'), 0, 5) * 2 +  # Night + unusual
+        ml_proba * 30 +                                        # ML ensemble probability
+        iso_scores * 15 +                                       # Isolation Forest anomaly
+        safe_col('is_unusual_device') * 8 +                     # SIM swap (Layer 3)
+        safe_col('is_shared_device') * 6 +                      # Mule network (Layer 7)
+        safe_col('is_low_activity_user') * 4 +                  # Dormant account (Layer 8)
+        safe_col('first_txn_high_value') * 7 +                  # New account abuse (Layer 11)
+        safe_col('is_suspicious_round') * 4 +                   # Round amount (Layer 9)
+        safe_col('is_night') * np.clip(safe_col('amount_zscore'), 0, 5) * 2 +
         safe_col('product_fraud_rate') * 3 +                    # Risky merchant (Layer 6)
         safe_col('round_x_new_device') * 3 +                    # Combo feature
-        safe_col('category_mismatch_risk') * 2                  # Category mismatch (Layer 10)
+        safe_col('category_mismatch_risk') * 2 +                # Category mismatch (Layer 10)
+        safe_col('is_rapid_fire') * 5 +                         # Velocity (Layer 12)
+        # Graph features (Layer 16)
+        safe_col('graph_community_fraud_rate') * 6 +            # High-fraud community
+        safe_col('graph_fraud_neighbor_ratio') * 4 +            # Connected to fraudsters
+        safe_col('graph_is_bridge') * 3 +                       # Bridge node (money mule)
+        safe_col('graph_betweenness') * 100 * 2                 # Network centrality
     )
 
     # Normalize to 0-100
@@ -47,8 +53,7 @@ def compute_risk_scores(df, predictions):
         risk_score >= 71, 'RED_BLOCK',
         np.where(risk_score >= 51, 'ORANGE_BIOMETRIC',
                  np.where(risk_score >= 31, 'YELLOW_PIN_VERIFY',
-                          'GREEN_APPROVE'))
-    )
+                          'GREEN_APPROVE')))
 
     auth_recommendation = np.where(
         risk_category == 'RED_BLOCK',
@@ -57,8 +62,7 @@ def compute_risk_scores(df, predictions):
                  'Request biometric re-verification before proceeding.',
                  np.where(risk_category == 'YELLOW_PIN_VERIFY',
                           'Request PIN re-entry for confirmation.',
-                          'Auto-approve. No additional authentication needed.'))
-    )
+                          'Auto-approve. No additional authentication needed.')))
 
     print(f"  Risk score range: {risk_score.min():.1f} to {risk_score.max():.1f}")
     print(f"  Risk distribution:")
@@ -72,7 +76,8 @@ def compute_risk_scores(df, predictions):
 
 def generate_explanations(df, risk_score):
     """
-    Layer 1: Explainable AI — generate human-readable reasons for each flagged transaction.
+    Layer 1: Explainable AI - generate human-readable reasons.
+    Now includes graph-based explanations.
     """
     print("\n[XAI] Generating explanations for flagged transactions...")
 
@@ -123,10 +128,26 @@ def generate_explanations(df, risk_score):
         if safe_val(row, 'category_mismatch_risk') == 1:
             reasons.append("Transaction in unusual merchant category for this user")
 
+        # Rapid-fire velocity
+        if safe_val(row, 'is_rapid_fire') == 1:
+            reasons.append("Rapid-fire transactions detected (< 5 min apart)")
+
         # Seasonal anomaly
         seasonal = safe_val(row, 'amt_vs_seasonal', 1)
         if seasonal > 3:
             reasons.append(f"Amount is {seasonal:.1f}x above seasonal baseline for this user")
+
+        # GRAPH-BASED EXPLANATIONS (NEW)
+        comm_fraud = safe_val(row, 'graph_community_fraud_rate')
+        if comm_fraud > 0.3:
+            reasons.append(f"User belongs to high-fraud network community ({comm_fraud*100:.0f}% fraud rate)")
+
+        fraud_neighbors = safe_val(row, 'graph_fraud_neighbor_ratio')
+        if fraud_neighbors > 0.3:
+            reasons.append(f"Connected to known fraudsters ({fraud_neighbors*100:.0f}% of connections)")
+
+        if safe_val(row, 'graph_is_bridge') == 1:
+            reasons.append("Network bridge node - potential money mule connecting fraud rings")
 
         if not reasons:
             reasons.append("No specific risk factors identified")

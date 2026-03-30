@@ -1,6 +1,6 @@
 """
 FraudShield AI — Visualization Module
-Generates all charts and graphs for the hackathon presentation.
+Generates all charts and graphs for the project.
 """
 
 import pandas as pd
@@ -27,7 +27,7 @@ COLORS = {
 
 
 def generate_all_visualizations(results, importances, feature_names, output_df, df, output_dir):
-    """Generate all visualizations for the hackathon."""
+    """Generate all visualizations for the project."""
     print("\n" + "=" * 70)
     print("GENERATING VISUALIZATIONS")
     print("=" * 70)
@@ -45,6 +45,7 @@ def generate_all_visualizations(results, importances, feature_names, output_df, 
     plot_amount_distribution(df, viz_dir)
     plot_sample_explanations(output_df, viz_dir)
     plot_metrics_comparison(results, viz_dir)
+    plot_graph_analysis(df, viz_dir)
 
     print(f"\n[VIZ] All visualizations saved to {viz_dir}")
 
@@ -54,7 +55,7 @@ def plot_roc_curves(results, viz_dir):
     print("  → ROC Curves...")
     fig, ax = plt.subplots(figsize=(10, 7))
     
-    colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#e67e22']
+    colors = ['#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#e67e22', '#1abc9c', '#e91e63']
     for i, (model_name, res) in enumerate(results.items()):
         ax.plot(res['fpr'], res['tpr'],
                 label=f"{res['name']} (AUC={res['auc']:.4f})",
@@ -330,4 +331,60 @@ def plot_metrics_comparison(results, viz_dir):
     
     plt.tight_layout()
     plt.savefig(os.path.join(viz_dir, 'metrics_comparison.png'), bbox_inches='tight')
+    plt.close()
+
+
+def plot_graph_analysis(df, viz_dir):
+    """Graph analysis visualizations: community fraud rates and feature distributions."""
+    print("  -> Graph Analysis Charts...")
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    # 1. Community fraud rate distribution
+    if 'graph_community_fraud_rate' in df.columns:
+        fraud_rates = df.groupby('card1')['graph_community_fraud_rate'].first().dropna()
+        axes[0].hist(fraud_rates[fraud_rates > 0], bins=30, color='#e74c3c', alpha=0.7, edgecolor='white')
+        axes[0].set_xlabel('Community Fraud Rate')
+        axes[0].set_ylabel('Number of Users')
+        axes[0].set_title('Fraud Ring Communities', fontweight='bold')
+        axes[0].axvline(x=0.3, color='black', linestyle='--', alpha=0.5, label='>30% = high risk')
+        axes[0].legend()
+        axes[0].grid(True, alpha=0.3)
+    else:
+        axes[0].text(0.5, 0.5, 'Graph features\nnot available', ha='center', va='center', fontsize=14)
+        axes[0].set_title('Community Fraud Rates', fontweight='bold')
+
+    # 2. Fraud neighbor ratio: fraud vs legit
+    if 'graph_fraud_neighbor_ratio' in df.columns:
+        legit_fn = df[df['isFraud'] == 0]['graph_fraud_neighbor_ratio']
+        fraud_fn = df[df['isFraud'] == 1]['graph_fraud_neighbor_ratio']
+        axes[1].hist(legit_fn[legit_fn > 0], bins=30, alpha=0.6, color='#2ecc71', density=True, label='Legitimate')
+        axes[1].hist(fraud_fn[fraud_fn > 0], bins=30, alpha=0.6, color='#e74c3c', density=True, label='Fraudulent')
+        axes[1].set_xlabel('Fraud Neighbor Ratio')
+        axes[1].set_ylabel('Density')
+        axes[1].set_title('Connected to Fraudsters', fontweight='bold')
+        axes[1].legend()
+        axes[1].grid(True, alpha=0.3)
+    else:
+        axes[1].text(0.5, 0.5, 'Graph features\nnot available', ha='center', va='center', fontsize=14)
+        axes[1].set_title('Fraud Neighbor Ratio', fontweight='bold')
+
+    # 3. PageRank: fraud vs legit
+    if 'graph_pagerank' in df.columns:
+        legit_pr = df[df['isFraud'] == 0]['graph_pagerank']
+        fraud_pr = df[df['isFraud'] == 1]['graph_pagerank']
+        axes[2].hist(legit_pr[legit_pr > 0], bins=30, alpha=0.6, color='#2ecc71', density=True, label='Legitimate')
+        axes[2].hist(fraud_pr[fraud_pr > 0], bins=30, alpha=0.6, color='#e74c3c', density=True, label='Fraudulent')
+        axes[2].set_xlabel('PageRank Score')
+        axes[2].set_ylabel('Density')
+        axes[2].set_title('Network Importance (PageRank)', fontweight='bold')
+        axes[2].legend()
+        axes[2].grid(True, alpha=0.3)
+    else:
+        axes[2].text(0.5, 0.5, 'Graph features\nnot available', ha='center', va='center', fontsize=14)
+        axes[2].set_title('PageRank Distribution', fontweight='bold')
+
+    plt.suptitle('FraudShield AI -- Graph-Based Fraud Ring Analysis', fontweight='bold', fontsize=14, y=1.02)
+    plt.tight_layout()
+    plt.savefig(os.path.join(viz_dir, 'graph_analysis.png'), bbox_inches='tight')
     plt.close()

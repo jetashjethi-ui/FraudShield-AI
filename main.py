@@ -1,11 +1,9 @@
 """
-╔══════════════════════════════════════════════════════════════════════════╗
-║  FraudShield AI — Adaptive Real-Time Fraud Detection                    ║
-║  with Explainable Risk Intelligence                                     ║
-║                                                                          ║
-║  15 Detection Layers | 5-Model Ensemble | Explainable AI              ║
-║  FrostHack — March 13-14, 2026                                          ║
-╚══════════════════════════════════════════════════════════════════════════╝
+FraudShield AI — Adaptive Real-Time Fraud Detection
+with Explainable Risk Intelligence
+
+16 Detection Layers | 6-Model Stacking Ensemble | Graph Analysis | SHAP XAI
+FrostHack — April 2026
 """
 
 import sys
@@ -13,6 +11,12 @@ import os
 import time
 import warnings
 warnings.filterwarnings('ignore')
+
+# Fix Windows cp1252 encoding crash for Unicode characters
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +30,11 @@ from src.feature_engine import build_all_features
 from src.models import prepare_features, apply_smote, train_models, get_feature_importance, save_metrics, save_model_artifacts
 from src.risk_scorer import compute_risk_scores, generate_explanations, build_output_table
 from src.visualizer import generate_all_visualizations
+from src.shap_engine import compute_shap_explanations
+from src.tuner import run_tuning
+from src.adversarial import run_adversarial_tests
+from src.report_generator import generate_pdf_report
+from src.autoencoder import run_autoencoder_detection
 
 
 def main():
@@ -38,10 +47,10 @@ def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(os.path.join(OUTPUT_DIR, "visualizations"), exist_ok=True)
 
-    print("╔" + "═" * 68 + "╗")
-    print("║  FraudShield AI — Complete Pipeline                                ║")
-    print("║  15 Detection Layers | 4-Model Ensemble | Explainable AI            ║")
-    print("╚" + "═" * 68 + "╝")
+    print("=" * 70)
+    print("  FraudShield AI -- Complete Pipeline")
+    print("  16 Detection Layers | 6-Model Stacking Ensemble | Graph Analysis")
+    print("=" * 70)
 
     # ═══════════════════════════════════════════════════════════════
     # STEP 1: LOAD DATA
@@ -57,7 +66,7 @@ def main():
     # STEP 2: FEATURE ENGINEERING (11 LAYERS)
     # ═══════════════════════════════════════════════════════════════
     print("\n" + "=" * 70)
-    print("STEP 2: FEATURE ENGINEERING (15 DETECTION LAYERS)")
+    print("STEP 2: FEATURE ENGINEERING (16 DETECTION LAYERS + GRAPH ANALYSIS)")
     print("=" * 70)
     df = build_all_features(df)
     step2_time = time.time()
@@ -80,15 +89,26 @@ def main():
     X_train_res, y_train_res = apply_smote(X_train, y_train, fraud_ratio=0.15)
 
     step3_time = time.time()
-    print(f"  ⏱ Step 3 completed in {step3_time - step2_time:.1f}s")
+    print(f"  Step 3 completed in {step3_time - step2_time:.1f}s")
 
-    # ═══════════════════════════════════════════════════════════════
+    # ===============================================================
+    # STEP 3.5: OPTUNA HYPERPARAMETER TUNING
+    # ===============================================================
+    print("\n" + "=" * 70)
+    print("STEP 3.5: OPTUNA HYPERPARAMETER TUNING")
+    print("=" * 70)
+    tuned_params = run_tuning(X_train, y_train, OUTPUT_DIR, n_trials=30)
+
+    step3b_time = time.time()
+    print(f"  Step 3.5 completed in {step3b_time - step3_time:.1f}s")
+
+    # ===============================================================
     # STEP 4: MODEL TRAINING
-    # ═══════════════════════════════════════════════════════════════
+    # ===============================================================
     print("\n" + "=" * 70)
     print("STEP 4: MODEL TRAINING & EVALUATION")
     print("=" * 70)
-    models, results, predictions = train_models(X_train_res, y_train_res, X_test, y_test)
+    models, results, predictions = train_models(X_train_res, y_train_res, X_test, y_test, tuned_params=tuned_params)
     
     # Feature importance
     importances = get_feature_importance(models, feature_names)
@@ -99,6 +119,16 @@ def main():
 
     step4_time = time.time()
     print(f"  ⏱ Step 4 completed in {step4_time - step3_time:.1f}s")
+
+    # ===============================================================
+    # STEP 4.5: DEEP LEARNING AUTOENCODER
+    # ===============================================================
+    ae_model, ae_results = run_autoencoder_detection(
+        X_train, y_train, X_test, y_test, OUTPUT_DIR
+    )
+
+    step4b_time = time.time()
+    print(f"  Step 4.5 completed in {step4b_time - step4_time:.1f}s")
 
     # ═══════════════════════════════════════════════════════════════
     # STEP 5: RISK SCORING & EXPLAINABILITY
@@ -157,16 +187,53 @@ def main():
     generate_all_visualizations(results, importances, feature_names, output_df, df_test, OUTPUT_DIR)
 
     step6_time = time.time()
-    print(f"  ⏱ Step 6 completed in {step6_time - step5_time:.1f}s")
+    print(f"  Step 6 completed in {step6_time - step5_time:.1f}s")
 
-    # ═══════════════════════════════════════════════════════════════
+    # ===============================================================
+    # STEP 7: SHAP EXPLAINABILITY
+    # ===============================================================
+    print("\n" + "=" * 70)
+    print("STEP 7: SHAP EXPLAINABILITY")
+    print("=" * 70)
+
+    # Use best tree model for SHAP (LightGBM or XGBoost)
+    shap_model = models.get('lightgbm', models.get('xgboost'))
+    if shap_model is not None:
+        shap_values, shap_explanations = compute_shap_explanations(
+            shap_model, X_test, list(X.columns), OUTPUT_DIR, n_samples=500
+        )
+    else:
+        print("  [SHAP] No tree model found, skipping...")
+
+    step7_time = time.time()
+    print(f"  Step 7 completed in {step7_time - step6_time:.1f}s")
+
+    # ===============================================================
+    # STEP 8: ADVERSARIAL ROBUSTNESS TESTING
+    # ===============================================================
+    adversarial_report = run_adversarial_tests(
+        models, X_test, y_test, list(X.columns), predictions, OUTPUT_DIR
+    )
+
+    step8_time = time.time()
+    print(f"  Step 8 completed in {step8_time - step7_time:.1f}s")
+
+    # ===============================================================
+    # STEP 9: AUTO-GENERATED PDF REPORT
+    # ===============================================================
+    pdf_path = generate_pdf_report(OUTPUT_DIR)
+
+    step9_time = time.time()
+    print(f"  Step 9 completed in {step9_time - step8_time:.1f}s")
+
+    # ===============================================================
     # FINAL SUMMARY
-    # ═══════════════════════════════════════════════════════════════
+    # ===============================================================
     total_time = time.time() - start_time
     
-    print("\n" + "╔" + "═" * 68 + "╗")
-    print("║  FRAUDSHIELD AI — PIPELINE COMPLETE!                              ║")
-    print("╚" + "═" * 68 + "╝")
+    print("\n" + "=" * 70)
+    print("  FRAUDSHIELD AI -- PIPELINE COMPLETE!")
+    print("=" * 70)
     
     print(f"\n  Total execution time: {total_time/60:.1f} minutes")
     
@@ -185,8 +252,8 @@ def main():
     print(f"    outputs/results/model_metrics.json")
     print(f"    outputs/results/scored_transactions.csv")
     print(f"    outputs/results/sample_flagged_transactions.csv")
-    print(f"    outputs/visualizations/ (10 charts)")
-    
+    print(f"    outputs/visualizations/ (charts)")
+
     best = max(results.items(), key=lambda x: x[1]['auc'])
     print(f"\n  BEST MODEL: {best[1]['name']} (AUC: {best[1]['auc']:.4f})")
     
@@ -199,7 +266,7 @@ def main():
     print(f"    \"Catches {caught_pct:.0f}% of all fraud\"")
     print(f"    \"Only inconveniences {fp_per_1000:.1f} out of every 1,000 legitimate customers\"")
     
-    print(f"\n  GO WIN THIS HACKATHON! 🏆")
+    print(f"\n  Pipeline finished successfully.")
 
 
 if __name__ == "__main__":
