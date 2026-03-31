@@ -27,8 +27,10 @@ venv/
 # Data files (too large for GitHub)
 data/
 
-# Model artifacts (large files)
+# Generated model binaries and large output files
 outputs/models/
+outputs/model_artifacts/
+outputs/pipeline_log.txt
 outputs/results/scored_transactions.csv
 
 # CatBoost training logs
