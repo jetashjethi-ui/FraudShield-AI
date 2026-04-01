@@ -2,8 +2,8 @@
 FraudShield AI — Adaptive Real-Time Fraud Detection
 with Explainable Risk Intelligence
 
-16 Detection Layers | 6-Model Stacking Ensemble | Graph Analysis | SHAP XAI
-FrostHack — April 2026
+17 Detection Layers | 7-Model Stacking Ensemble | Graph Analysis | SHAP XAI
+FrostHack — March 2026
 """
 
 import sys
@@ -49,7 +49,7 @@ def main():
 
     print("=" * 70)
     print("  FraudShield AI -- Complete Pipeline")
-    print("  16 Detection Layers | 6-Model Stacking Ensemble | Graph Analysis")
+    print("  17 Detection Layers | 7-Model Stacking Ensemble | Graph Analysis")
     print("=" * 70)
 
     # ═══════════════════════════════════════════════════════════════

@@ -340,11 +340,11 @@ with st.sidebar:
         <div style="margin-top:12px;">
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Detection Layers</span>
-                <span style="color:#10b9ff; font-weight:700;">16</span>
+                <span style="color:#10b9ff; font-weight:700;">17</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">ML Models</span>
-                <span style="color:#8b5cf6; font-weight:700;">6</span>
+                <span style="color:#8b5cf6; font-weight:700;">7</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Ensemble</span>
@@ -363,7 +363,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-    st.caption("FrostHack · April 2026")
+    st.caption("FrostHack · March 2026")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -387,9 +387,9 @@ if page == "🏠 Dashboard":
 
         cards = [
             ("blue", f"{best_auc:.4f}", "BEST AUC-ROC", "LightGBM"),
-            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "6-Model Stacking"),
+            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "7-Model Stacking"),
             ("green", f"{ens_prec:.1%}", "PRECISION", f"Only {fp_rate:.1f} FP per 1K"),
-            ("amber", "16", "DETECTION LAYERS", "+ Graph Analysis"),
+            ("amber", "17", "DETECTION LAYERS", "+ Graph Analysis"),
         ]
         for col, (cls, val, label, delta) in zip(cols, cards):
             col.markdown(f"""
@@ -422,19 +422,19 @@ if page == "🏠 Dashboard":
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Feature Engineering</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 16 Detection Layers</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 17 Detection Layers</div>
             <div style="margin-top:8px;">
                 <span style="{mini_style}">⚡ Velocity</span>
                 <span style="{mini_style}">📱 Device</span>
                 <span style="{mini_style}">📧 Email</span>
                 <span style="{mini_style}">🔗 Graph</span>
-                <span style="{mini_style}">+ 12 more</span>
+                <span style="{mini_style}">+ 13 more</span>
             </div>
         </div>
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Stacking Ensemble</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 6-Model Stacking</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 7-Model Stacking</div>
             <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; max-width:400px; margin-left:auto; margin-right:auto;">
                 <div style="background:rgba(16,185,255,0.1); border:1px solid rgba(16,185,255,0.2); border-radius:8px; padding:6px; text-align:center;">
                     <div style="color:#10b9ff; font-weight:700; font-size:0.8rem;">XGBoost</div>
