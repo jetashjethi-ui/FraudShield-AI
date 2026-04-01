@@ -1,5 +1,5 @@
 """
-FraudShield AI — Premium Interactive Dashboard
+FraudShield AI Dashboard
 Interactive dashboard for exploring FraudShield AI results. Run: streamlit run dashboard.py
 """
 
@@ -22,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─── PREMIUM CSS WITH ANIMATIONS ─────────────────────────────────────
+# ─── CSS STYLING ─────────────────────────────────────────────────────
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');

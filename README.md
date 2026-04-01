@@ -1,14 +1,14 @@
 # FraudShield AI
 
-Fraud detection system for the IEEE-CIS dataset, built for FrostHack (March 2026).
+Fraud detection system built on the IEEE-CIS dataset for FrostHack (March 2026).
 
-## Overview
+## What it does
 
-FraudShield AI processes 590K+ financial transactions through a multi-stage pipeline:
-- 17 feature engineering layers extract behavioral, temporal, and network signals
-- 7 models (including a deep autoencoder) are trained and evaluated
-- A 4-model stacking ensemble with logistic regression meta-learner produces final predictions
-- Each transaction receives a risk score (0-100) and a 4-tier response (approve/PIN/biometric/block)
+Processes 590K+ transactions through a pipeline that:
+- Engineers 17 feature layers (behavioral, temporal, network-based)
+- Trains 7 ML models and stacks the best 4 into an ensemble
+- Includes a deep autoencoder for unsupervised anomaly detection
+- Assigns risk scores (0-100) with adaptive authentication tiers
 
 ## Results
 
@@ -23,96 +23,74 @@ FraudShield AI processes 590K+ financial transactions through a multi-stage pipe
 | Deep Autoencoder | 0.696 |
 | **Stacking Ensemble** | **0.956** |
 
-- Adversarial robustness: 5/5 tests passed (100%)
-- Autoencoder fraud/normal error ratio: 3.4x
+Adversarial robustness: 5/5 tests passed. Autoencoder error ratio: 3.4x (fraud vs normal).
 
-## How to Run
+## How to run
 
-### Setup
 ```bash
 pip install -r requirements.txt
-```
-
-### Run the pipeline
-```bash
 python main.py
 ```
-This trains all models, runs Optuna tuning (30 trials), generates SHAP explanations, runs adversarial tests, and produces a PDF report.
 
-### Launch the dashboard
+This runs the full pipeline: feature engineering, Optuna tuning (30 trials), model training, autoencoder, SHAP, adversarial tests, and PDF report generation.
+
+Dashboard:
 ```bash
 streamlit run dashboard.py
 ```
-Opens a 9-page interactive dashboard at `http://localhost:8501`.
 
-### Start the API
+API:
 ```bash
 uvicorn api:app --reload
 ```
-REST API at `http://localhost:8000` with endpoints: `/score`, `/batch`, `/health`, `/roi`.
 
 ## Dataset
 
-[IEEE-CIS Fraud Detection](https://www.kaggle.com/c/ieee-fraud-detection) from Kaggle. Place `train_transaction.csv` and `train_identity.csv` in the `data/` folder.
+[IEEE-CIS Fraud Detection](https://www.kaggle.com/c/ieee-fraud-detection) from Kaggle. Put `train_transaction.csv` and `train_identity.csv` in `data/`.
 
-## Project Structure
+## Project structure
 
 ```
-├── main.py                  # Full pipeline (Steps 1-9)
-├── dashboard.py             # Streamlit dashboard (9 pages)
-├── api.py                   # FastAPI real-time scoring
-├── src/
-│   ├── data_loader.py       # Dataset loading and merging
-│   ├── feature_engine.py    # 17 feature engineering layers
-│   ├── models.py            # Model training, 5-fold OOF stacking
-│   ├── risk_scorer.py       # Risk scoring and tier assignment
-│   ├── visualizer.py        # Chart generation (16 plots)
-│   ├── shap_engine.py       # SHAP explainability
-│   ├── graph_engine.py      # NetworkX graph analysis + Louvain
-│   ├── tuner.py             # Optuna hyperparameter optimization
-│   ├── adversarial.py       # Adversarial robustness testing
-│   ├── autoencoder.py       # Deep learning anomaly detector
-│   └── report_generator.py  # Auto PDF report generation
-├── data/                    # Dataset files (not in repo)
-├── outputs/
-│   ├── results/             # Metrics, reports, scored transactions
-│   └── visualizations/      # All generated plots
-├── requirements.txt
-└── Summary_Report.md
+main.py               # Pipeline entry point
+dashboard.py           # 9-page Streamlit dashboard
+api.py                 # FastAPI scoring endpoint
+src/
+  data_loader.py       # Load and merge datasets
+  feature_engine.py    # 17 feature layers
+  models.py            # Training + 5-fold OOF stacking
+  risk_scorer.py       # Risk scores and tier assignment
+  visualizer.py        # Chart generation
+  shap_engine.py       # SHAP explanations
+  graph_engine.py      # NetworkX + Louvain
+  tuner.py             # Optuna optimization
+  adversarial.py       # Robustness tests
+  autoencoder.py       # Anomaly detection
+  report_generator.py  # PDF report
+outputs/
+  results/             # Metrics, flagged transactions
+  visualizations/      # 16 plots
 ```
 
-## Pipeline Steps
+## Pipeline overview
 
-1. **Data Loading** — Merge transaction + identity tables
-2. **Feature Engineering** — 17 detection layers + graph features + target encoding
-3. **Data Preparation** — Train/test split, SMOTE oversampling
-4. **Optuna Tuning** — 30-trial Bayesian optimization for XGBoost + LightGBM
-5. **Model Training** — 5-fold OOF stacking with 4-model meta-learner
-6. **Autoencoder** — Unsupervised anomaly detection (bottleneck architecture)
-7. **Risk Scoring** — 0-100 score with 4-tier adaptive authentication
-8. **Visualizations** — 16 diagnostic plots
-9. **SHAP** — Global + local explainability (summary, bar, waterfall)
-10. **Adversarial Testing** — 5 attack scenarios
-11. **PDF Report** — Auto-generated multi-page report
+1. Load and merge transaction + identity data
+2. Engineer 17 feature layers (amount stats, behavioral profiles, velocity, graph features, target encoding, etc.)
+3. Train/test split (80/20 stratified) + SMOTE
+4. Optuna hyperparameter tuning (30 trials, XGBoost + LightGBM)
+5. Train 7 models, stack top 4 with logistic regression meta-learner
+6. Run autoencoder on normal transactions to detect anomalies
+7. Score transactions 0-100, assign GREEN/YELLOW/ORANGE/RED tiers
+8. Generate 16 visualizations + SHAP plots
+9. Run 5 adversarial attack simulations
+10. Generate PDF report
 
-## Dashboard Pages
+## Dashboard
 
-| Page | Description |
-|------|-------------|
-| Dashboard | Overview metrics, risk distribution, key charts |
-| Live Detector | Score individual transactions in real-time |
-| Models | ROC curves, confusion matrices, per-model comparison |
-| Analytics | Fraud patterns by hour, product, amount |
-| Flagged | Table of high-risk flagged transactions |
-| ROI Calculator | Cost-benefit analysis with adjustable parameters |
-| Robustness | Adversarial test results |
-| Simulator | Generate and score random transactions live |
-| Autoencoder | Architecture visualization, reconstruction error analysis |
+9 pages: overview, live detector, model comparison, analytics, flagged transactions, ROI calculator, adversarial results, live simulator, autoencoder analysis.
 
-## Tech Stack
+## Tech
 
-Python 3.10+, XGBoost, LightGBM, CatBoost, scikit-learn, SHAP, NetworkX, Optuna, Streamlit, FastAPI, fpdf2
+Python, XGBoost, LightGBM, CatBoost, scikit-learn, SHAP, NetworkX, Optuna, Streamlit, FastAPI, fpdf2
 
 ---
-
-*Jetash Jethi · FrostHack March 2026*
+Jetash Jethi · FrostHack 2026
