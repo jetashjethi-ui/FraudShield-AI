@@ -1028,9 +1028,10 @@ elif page == "🎮 Simulator":
                         <span style="color:#94a3b8; font-size:0.8rem;">📱 {device or 'Unknown'}</span>
                         <span style="color:#94a3b8; font-size:0.8rem;">📧 {email or 'None'}</span>
                     </div>
-                    <div style="margin-top:8px; background:rgba(255,255,255,0.05); border-radius:8px; height:20px; overflow:hidden;">
-                        <div style="width:{risk_score}%; height:100%; background:linear-gradient(90deg, {cat_color}66, {cat_color}); border-radius:8px; display:flex; align-items:center; padding-left:8px;">
-                            <span style="color:white; font-size:0.7rem; font-weight:600;">Risk: {risk_score}/100</span>
+                    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                        <span style="color:{cat_color}; font-size:0.8rem; font-weight:700; min-width:70px;">Risk: {risk_score}/100</span>
+                        <div style="flex:1; background:rgba(255,255,255,0.05); border-radius:8px; height:14px; overflow:hidden;">
+                            <div style="width:{max(risk_score, 2)}%; height:100%; background:linear-gradient(90deg, {cat_color}66, {cat_color}); border-radius:8px;"></div>
                         </div>
                     </div>
                     <div style="margin-top:6px; color:#94a3b8; font-size:0.75rem;">
