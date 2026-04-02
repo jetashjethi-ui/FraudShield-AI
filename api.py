@@ -36,7 +36,7 @@ from typing import Optional, List
 app = FastAPI(
     title="FraudShield AI — Real-Time Scoring API",
     description="Adaptive fraud detection with explainable risk intelligence. "
-                "17 detection layers, 6-model stacking ensemble, graph analysis, SHAP XAI.",
+                "17 detection layers, 7 models with 4-model stacking ensemble, graph analysis, SHAP XAI.",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -272,7 +272,7 @@ async def root():
         "name": "FraudShield AI",
         "version": "2.0.0",
         "description": "Real-time fraud detection with explainable risk intelligence",
-        "architecture": "17 Detection Layers | 6-Model Stacking | Graph Analysis | SHAP XAI",
+        "architecture": "17 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis | SHAP XAI",
         "endpoints": {
             "/docs": "Interactive API documentation (Swagger UI)",
             "/score": "POST - Score a single transaction",

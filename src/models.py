@@ -1,6 +1,6 @@
 """
 FraudShield AI — Model Training Module (v2)
-6-Model Stacking Ensemble: XGBoost, LightGBM, CatBoost, Random Forest, MLP, Isolation Forest
+7 Models trained, 4-Model Stacking Ensemble: XGBoost, LightGBM, CatBoost, MLP
 Meta-learner: Logistic Regression on out-of-fold predictions
 """
 
@@ -136,7 +136,7 @@ def _build_base_models():
 def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     """Train all models with stacking ensemble."""
     print("\n" + "=" * 70)
-    print("MODEL TRAINING (6-Model Stacking Ensemble)")
+    print("MODEL TRAINING (7 Models, 4-Model Stacking)")
     print("=" * 70)
 
     results = {}
