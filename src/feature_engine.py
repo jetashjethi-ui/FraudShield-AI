@@ -9,9 +9,9 @@ from src.graph_engine import build_graph_features
 
 
 def build_all_features(df):
-    """Master function: build all 17 layers of features."""
+    """Master function: build all 25 layers of features."""
     print("\n" + "=" * 70)
-    print("FEATURE ENGINEERING -- 17 DETECTION LAYERS")
+    print("FEATURE ENGINEERING -- 25 DETECTION LAYERS")
     print("=" * 70)
 
     df = amount_features(df)          # Layer 1, 9
@@ -31,6 +31,14 @@ def build_all_features(df):
     df = network_features(df)         # Layer 14
     df = build_graph_features(df)     # Layer 16 -- GRAPH ANALYSIS
     df = target_encoding(df)          # Layer 17 -- TARGET ENCODING
+    df = uid_features(df)             # Layer 18 -- USER IDENTITY PROFILING
+    df = uid_time_windows(df)         # Layer 19 -- TIME-WINDOW VELOCITY
+    df = v_feature_aggregations(df)   # Layer 20 -- V-FEATURE INTELLIGENCE
+    df = frequency_encoding(df)       # Layer 21 -- FREQUENCY ENCODING
+    df = peer_group_deviation(df)     # Layer 22 -- PEER GROUP ANOMALY
+    df = transaction_entropy(df)      # Layer 23 -- ENTROPY ANALYSIS
+    df = lag_features(df)             # Layer 24 -- LAG / SEQUENTIAL PATTERNS
+    df = cross_feature_fraud_rates(df)# Layer 25 -- CROSS-FEATURE COMBINATIONS
     df = interaction_features(df)     # Cross-layer combos (expanded)
     df = missing_indicators(df)       # Missingness as signal
 
@@ -455,6 +463,396 @@ def interaction_features(df):
     df['graph_fraud_neighbor_x_round'] = df.get('graph_fraud_neighbor_ratio', pd.Series(0, index=df.index)) * df['is_suspicious_round']
 
     print(f"    -> 17 interaction features created")
+    return df
+
+
+# --- UID FEATURES (Layer 18) -- USER IDENTITY PROFILING ------------------
+def uid_features(df):
+    """Create pseudo user IDs and compute per-user aggregations.
+    Top Kaggle solutions used UID features to boost AUC significantly.
+    Combines card1 + addr1 to fingerprint individual users."""
+    print("  [Layer 18] UID Features (User Identity Profiling)...")
+
+    # Build UID from card1 + addr1 (primary user fingerprint)
+    df['uid'] = df['card1'].astype(str) + '_' + df['addr1'].astype(str)
+
+    # Also build a secondary UID with card1 + addr1 + D1 for finer granularity
+    if 'D1' in df.columns:
+        df['uid2'] = df['uid'] + '_' + df['D1'].fillna(-1).astype(int).astype(str)
+    else:
+        df['uid2'] = df['uid']
+
+    # --- Per-UID aggregations on primary UID ---
+    uid_amt = df.groupby('uid')['TransactionAmt'].agg(
+        uid_amt_mean='mean',
+        uid_amt_std='std',
+        uid_amt_max='max',
+        uid_amt_min='min',
+        uid_txn_count='count'
+    ).reset_index()
+    uid_amt['uid_amt_std'] = uid_amt['uid_amt_std'].fillna(0)
+    uid_amt['uid_amt_range'] = uid_amt['uid_amt_max'] - uid_amt['uid_amt_min']
+    df = df.merge(uid_amt, on='uid', how='left')
+
+    # Amount deviation from user's own pattern
+    df['uid_amt_zscore'] = (df['TransactionAmt'] - df['uid_amt_mean']) / df['uid_amt_std'].clip(lower=1)
+    df['uid_amt_ratio'] = df['TransactionAmt'] / df['uid_amt_mean'].clip(lower=0.01)
+
+    # Is this the user's largest transaction ever?
+    df['uid_is_max_amt'] = (df['TransactionAmt'] >= df['uid_amt_max'] * 0.99).astype(int)
+
+    # --- Per-UID fraud history (only works when isFraud is available) ---
+    if 'isFraud' in df.columns:
+        global_fraud_rate = df['isFraud'].mean()
+        smooth = 50
+
+        uid_fraud = df.groupby('uid')['isFraud'].agg(['mean', 'sum', 'count']).reset_index()
+        uid_fraud.columns = ['uid', 'uid_fraud_rate_raw', 'uid_fraud_count', 'uid_total_count']
+        # Smoothed fraud rate to avoid overfitting on rare UIDs
+        uid_fraud['uid_fraud_rate'] = (
+            uid_fraud['uid_total_count'] * uid_fraud['uid_fraud_rate_raw'] + smooth * global_fraud_rate
+        ) / (uid_fraud['uid_total_count'] + smooth)
+        df = df.merge(uid_fraud[['uid', 'uid_fraud_rate', 'uid_fraud_count']], on='uid', how='left')
+    else:
+        df['uid_fraud_rate'] = 0
+        df['uid_fraud_count'] = 0
+
+    # --- Per-UID device diversity ---
+    if 'DeviceInfo' in df.columns:
+        uid_devices = df.groupby('uid')['DeviceInfo'].nunique().reset_index()
+        uid_devices.columns = ['uid', 'uid_device_count']
+        df = df.merge(uid_devices, on='uid', how='left')
+    else:
+        df['uid_device_count'] = 1
+
+    # --- Per-UID email diversity ---
+    if 'P_emaildomain' in df.columns:
+        uid_email = df.groupby('uid')['P_emaildomain'].nunique().reset_index()
+        uid_email.columns = ['uid', 'uid_email_count']
+        df = df.merge(uid_email, on='uid', how='left')
+    else:
+        df['uid_email_count'] = 1
+
+    # --- Per-UID product diversity ---
+    uid_products = df.groupby('uid')['ProductCD'].nunique().reset_index()
+    uid_products.columns = ['uid', 'uid_product_count']
+    df = df.merge(uid_products, on='uid', how='left')
+
+    # --- Per-UID time gap analysis ---
+    df_sorted = df.sort_values(['uid', 'TransactionDT'])
+    df_sorted['uid_time_diff'] = df_sorted.groupby('uid')['TransactionDT'].diff()
+    df['uid_time_diff'] = df_sorted['uid_time_diff']
+    df['uid_time_diff'] = df['uid_time_diff'].fillna(-1)
+
+    # Very fast repeat (< 60 seconds between transactions)
+    df['uid_rapid_repeat'] = (df['uid_time_diff'].between(0, 60)).astype(int)
+    # Burst activity (< 5 minutes)
+    df['uid_burst'] = (df['uid_time_diff'].between(0, 300)).astype(int)
+
+    # --- UID2 (finer) aggregations ---
+    uid2_count = df.groupby('uid2')['TransactionAmt'].agg(
+        uid2_txn_count='count',
+        uid2_amt_mean='mean'
+    ).reset_index()
+    df = df.merge(uid2_count, on='uid2', how='left')
+
+    # --- Clean up: drop string UID columns (can't feed to models) ---
+    df = df.drop(columns=['uid', 'uid2'], errors='ignore')
+
+    features_added = [
+        'uid_amt_mean', 'uid_amt_std', 'uid_amt_max', 'uid_amt_min',
+        'uid_txn_count', 'uid_amt_range', 'uid_amt_zscore', 'uid_amt_ratio',
+        'uid_is_max_amt', 'uid_fraud_rate', 'uid_fraud_count',
+        'uid_device_count', 'uid_email_count', 'uid_product_count',
+        'uid_time_diff', 'uid_rapid_repeat', 'uid_burst',
+        'uid2_txn_count', 'uid2_amt_mean'
+    ]
+    print(f"    -> {len(features_added)} UID features created")
+    return df
+
+
+# --- LAYER 19: TIME-WINDOW VELOCITY PER UID --------------------------------
+def uid_time_windows(df):
+    """Transaction velocity per user in 1hr, 6hr, 24hr windows.
+    Uses time-binning for speed (O(n) instead of O(n²))."""
+    print("  [Layer 19] Time-Window Velocity (per UID)...")
+
+    # Rebuild UID temporarily for grouping
+    df['_uid'] = df['card1'].astype(str) + '_' + df['addr1'].astype(str)
+
+    # Create time bins
+    df['_hour_bin'] = df['TransactionDT'] // 3600     # 1-hour bins
+    df['_6h_bin'] = df['TransactionDT'] // 21600      # 6-hour bins
+    df['_day_bin'] = df['TransactionDT'] // 86400      # 24-hour bins
+
+    for bin_col, label in [('_hour_bin', '1h'), ('_6h_bin', '6h'), ('_day_bin', '24h')]:
+        # Count transactions per uid per time bin
+        bin_stats = df.groupby(['_uid', bin_col])['TransactionAmt'].agg(
+            **{f'uid_txn_{label}': 'count', f'uid_amt_sum_{label}': 'sum'}
+        ).reset_index()
+        df = df.merge(bin_stats, on=['_uid', bin_col], how='left', suffixes=('', '_drop'))
+        # Drop any duplicate columns from merge
+        df = df.drop(columns=[c for c in df.columns if c.endswith('_drop')], errors='ignore')
+
+    # Derived: is this a velocity spike?
+    df['uid_velocity_spike_1h'] = (df['uid_txn_1h'] >= 3).astype(int)
+    df['uid_velocity_spike_24h'] = (df['uid_txn_24h'] >= 10).astype(int)
+    if 'uid_amt_mean' in df.columns:
+        df['uid_amt_spike_24h'] = (df['uid_amt_sum_24h'] > df['uid_amt_mean'] * 3).astype(int)
+    else:
+        df['uid_amt_spike_24h'] = 0
+
+    # Per-UID max velocity (peak hour activity)
+    max_hourly = df.groupby('_uid')['uid_txn_1h'].max().reset_index()
+    max_hourly.columns = ['_uid', 'uid_max_txn_per_hour']
+    df = df.merge(max_hourly, on='_uid', how='left')
+
+    # Clean up temp columns
+    df = df.drop(columns=['_uid', '_hour_bin', '_6h_bin', '_day_bin'], errors='ignore')
+    print(f"    -> 10 time-window features created (1h, 6h, 24h)")
+    return df
+
+
+# --- LAYER 20: V-FEATURE INTELLIGENCE (PCA + Aggregations) -----------------
+def v_feature_aggregations(df):
+    """Extract intelligence from anonymous V columns using PCA and group statistics.
+    The V1-V339 columns contain rich signal but are anonymous and noisy."""
+    print("  [Layer 20] V-Feature Intelligence...")
+
+    # Find all V columns present
+    v_cols = [c for c in df.columns if c.startswith('V') and c[1:].isdigit()]
+
+    if len(v_cols) < 5:
+        print("    -> Not enough V columns, skipping")
+        return df
+
+    print(f"    -> Found {len(v_cols)} V columns")
+
+    # Fill NaN with column median for V columns (they have lots of missing)
+    v_data = df[v_cols].fillna(df[v_cols].median())
+
+    # Group statistics across V columns per row
+    df['v_mean'] = v_data.mean(axis=1)
+    df['v_std'] = v_data.std(axis=1)
+    df['v_max'] = v_data.max(axis=1)
+    df['v_min'] = v_data.min(axis=1)
+    df['v_range'] = df['v_max'] - df['v_min']
+    df['v_nulls'] = df[v_cols].isnull().sum(axis=1)
+    df['v_null_pct'] = df['v_nulls'] / len(v_cols)
+
+    # PCA on V columns (top 5 components to capture main patterns)
+    try:
+        from sklearn.decomposition import PCA
+        from sklearn.preprocessing import StandardScaler
+
+        # Standardize before PCA
+        scaler = StandardScaler()
+        v_scaled = scaler.fit_transform(v_data)
+
+        n_components = min(5, len(v_cols))
+        pca = PCA(n_components=n_components, random_state=42)
+        v_pca = pca.fit_transform(v_scaled)
+
+        for i in range(n_components):
+            df[f'v_pca_{i+1}'] = v_pca[:, i]
+
+        explained = sum(pca.explained_variance_ratio_) * 100
+        print(f"    -> PCA: {n_components} components explain {explained:.1f}% variance")
+    except Exception as e:
+        print(f"    -> PCA failed: {e}")
+
+    print(f"    -> 12 V-feature aggregation features created")
+    return df
+
+
+# --- LAYER 21: FREQUENCY ENCODING ------------------------------------------
+def frequency_encoding(df):
+    """Encode categorical features by their frequency in the dataset.
+    Rare values often correlate with fraud (new cards, unusual addresses)."""
+    print("  [Layer 21] Frequency Encoding...")
+
+    freq_cols = ['card1', 'card2', 'addr1', 'addr2', 'P_emaildomain',
+                 'R_emaildomain', 'DeviceInfo', 'ProductCD']
+
+    encoded_count = 0
+    for col in freq_cols:
+        if col not in df.columns:
+            continue
+        freq = df[col].value_counts(normalize=True)
+        df[f'{col}_freq'] = df[col].map(freq).fillna(0)
+
+        # Also create a "rarity" flag — values appearing less than 0.01%
+        df[f'{col}_is_rare'] = (df[f'{col}_freq'] < 0.0001).astype(int)
+        encoded_count += 1
+
+    print(f"    -> {encoded_count * 2} frequency features created ({encoded_count} freq + {encoded_count} rare flags)")
+    return df
+
+
+# --- LAYER 22: PEER GROUP DEVIATION ----------------------------------------
+def peer_group_deviation(df):
+    """Compare each transaction to its peer group (same product, card type, region).
+    Fraud transactions often deviate significantly from their peers."""
+    print("  [Layer 22] Peer Group Deviation Analysis...")
+
+    peer_groups = []
+
+    # Peer group 1: Same ProductCD
+    if 'ProductCD' in df.columns:
+        stats = df.groupby('ProductCD')['TransactionAmt'].agg(['mean', 'std']).reset_index()
+        stats.columns = ['ProductCD', 'peer_product_mean', 'peer_product_std']
+        df = df.merge(stats, on='ProductCD', how='left')
+        df['peer_product_std'] = df['peer_product_std'].fillna(1)
+        df['amt_vs_product_peer'] = (df['TransactionAmt'] - df['peer_product_mean']) / (df['peer_product_std'] + 1)
+        peer_groups.append('product')
+
+    # Peer group 2: Same card4 (card type: visa, mastercard, etc)
+    if 'card4' in df.columns:
+        stats = df.groupby('card4')['TransactionAmt'].agg(['mean', 'std']).reset_index()
+        stats.columns = ['card4', 'peer_card4_mean', 'peer_card4_std']
+        df = df.merge(stats, on='card4', how='left')
+        df['peer_card4_std'] = df['peer_card4_std'].fillna(1)
+        df['amt_vs_card_peer'] = (df['TransactionAmt'] - df['peer_card4_mean']) / (df['peer_card4_std'] + 1)
+        peer_groups.append('card_type')
+
+    # Peer group 3: Same addr1 (region)
+    if 'addr1' in df.columns:
+        stats = df.groupby('addr1')['TransactionAmt'].agg(['mean', 'std']).reset_index()
+        stats.columns = ['addr1', 'peer_region_mean', 'peer_region_std']
+        df = df.merge(stats, on='addr1', how='left')
+        df['peer_region_std'] = df['peer_region_std'].fillna(1)
+        df['amt_vs_region_peer'] = (df['TransactionAmt'] - df['peer_region_mean']) / (df['peer_region_std'] + 1)
+        peer_groups.append('region')
+
+    # Combined deviation: how much does this transaction deviate across ALL peer groups?
+    dev_cols = [c for c in df.columns if c.startswith('amt_vs_') and c.endswith('_peer')]
+    if dev_cols:
+        df['total_peer_deviation'] = df[dev_cols].abs().mean(axis=1)
+        df['is_peer_outlier'] = (df['total_peer_deviation'] > 2).astype(int)
+
+    print(f"    -> {len(peer_groups)} peer groups analyzed, {len(dev_cols) + 2} features created")
+    return df
+
+
+# --- LAYER 23: TRANSACTION ENTROPY ----------------------------------------
+def transaction_entropy(df):
+    """Measure entropy (randomness/diversity) of user behavior.
+    Legitimate users have consistent patterns (low entropy).
+    Fraudsters show erratic, high-entropy behavior."""
+    print("  [Layer 23] Transaction Entropy Analysis...")
+
+    # Build UID for grouping
+    df['_uid_ent'] = df['card1'].astype(str) + '_' + df['addr1'].astype(str)
+
+    features_created = 0
+
+    # Entropy of transaction amounts per user (binned)
+    if 'TransactionAmt' in df.columns:
+        # Create amount bins
+        df['_amt_bin'] = pd.cut(df['TransactionAmt'], bins=10, labels=False).fillna(0).astype(int)
+        
+        # Per-user: how many different amount bins do they use?
+        user_amt_diversity = df.groupby('_uid_ent')['_amt_bin'].nunique().reset_index()
+        user_amt_diversity.columns = ['_uid_ent', 'user_amt_entropy']
+        df = df.merge(user_amt_diversity, on='_uid_ent', how='left')
+        df = df.drop(columns=['_amt_bin'], errors='ignore')
+        features_created += 1
+
+    # Entropy of product codes per user
+    if 'ProductCD' in df.columns:
+        user_prod_div = df.groupby('_uid_ent')['ProductCD'].nunique().reset_index()
+        user_prod_div.columns = ['_uid_ent', 'user_product_entropy']
+        df = df.merge(user_prod_div, on='_uid_ent', how='left')
+        features_created += 1
+
+    # Entropy of time-of-day per user (do they always shop at same time?)
+    if 'hour_of_day' in df.columns:
+        user_hour_div = df.groupby('_uid_ent')['hour_of_day'].nunique().reset_index()
+        user_hour_div.columns = ['_uid_ent', 'user_time_entropy']
+        df = df.merge(user_hour_div, on='_uid_ent', how='left')
+        features_created += 1
+
+    # High entropy flag: users with erratic behavior across all dimensions
+    entropy_cols = [c for c in df.columns if c.startswith('user_') and c.endswith('_entropy')]
+    if entropy_cols:
+        for col in entropy_cols:
+            col_median = df[col].median()
+            df[f'{col}_high'] = (df[col] > col_median * 2).astype(int)
+            features_created += 1
+
+    df = df.drop(columns=['_uid_ent'], errors='ignore')
+    print(f"    -> {features_created} entropy features created")
+    return df
+
+
+# --- LAYER 24: LAG / SEQUENTIAL FEATURES ----------------------------------
+def lag_features(df):
+    """Per-user sequential patterns: previous transaction amount, delta, ratio.
+    Fraudsters often show sudden jumps from prior transaction patterns."""
+    print("  [Layer 24] Lag / Sequential Features...")
+
+    df['_uid_lag'] = df['card1'].astype(str) + '_' + df['addr1'].astype(str)
+    df = df.sort_values(['_uid_lag', 'TransactionDT'])
+
+    # Previous transaction amount (per user)
+    df['prev_amt'] = df.groupby('_uid_lag')['TransactionAmt'].shift(1)
+    df['prev_amt'] = df['prev_amt'].fillna(df['TransactionAmt'])
+
+    # Delta from previous transaction
+    df['amt_delta'] = df['TransactionAmt'] - df['prev_amt']
+    df['amt_ratio_prev'] = df['TransactionAmt'] / (df['prev_amt'] + 1)
+
+    # Time since previous transaction (per user)
+    df['prev_time'] = df.groupby('_uid_lag')['TransactionDT'].shift(1)
+    df['time_since_prev'] = df['TransactionDT'] - df['prev_time'].fillna(df['TransactionDT'])
+
+    # Running rank within user (is this their 1st, 2nd, 3rd txn?)
+    df['user_txn_rank'] = df.groupby('_uid_lag').cumcount()
+
+    df = df.drop(columns=['_uid_lag', 'prev_time'], errors='ignore')
+    print(f"    -> 6 lag features created")
+    return df
+
+
+# --- LAYER 25: CROSS-FEATURE FRAUD RATES ----------------------------------
+def cross_feature_fraud_rates(df):
+    """Fraud rates for feature COMBINATIONS (not individual features).
+    card1 x ProductCD might have high fraud even if both are safe individually."""
+    print("  [Layer 25] Cross-Feature Fraud Rates...")
+
+    if 'isFraud' not in df.columns:
+        print("    -> isFraud not found, skipping")
+        return df
+
+    global_mean = df['isFraud'].mean()
+    smooth = 30
+    features_created = 0
+
+    combos = [
+        ('card1', 'ProductCD'),
+        ('card1', 'addr1'),
+        ('addr1', 'P_emaildomain'),
+        ('ProductCD', 'P_emaildomain'),
+    ]
+
+    for col_a, col_b in combos:
+        if col_a not in df.columns or col_b not in df.columns:
+            continue
+        combo_name = f'{col_a}_x_{col_b}'
+        df['_combo'] = df[col_a].astype(str) + '_' + df[col_b].astype(str)
+
+        stats = df.groupby('_combo')['isFraud'].agg(['mean', 'count']).reset_index()
+        stats.columns = ['_combo', '_mean', '_count']
+        stats[f'{combo_name}_fraud_rate'] = (
+            (stats['_count'] * stats['_mean'] + smooth * global_mean) /
+            (stats['_count'] + smooth)
+        )
+
+        df = df.merge(stats[['_combo', f'{combo_name}_fraud_rate']], on='_combo', how='left')
+        df = df.drop(columns=['_combo'], errors='ignore')
+        features_created += 1
+
+    print(f"    -> {features_created} cross-feature fraud rates created")
     return df
 
 

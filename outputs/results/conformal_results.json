@@ -1,0 +1,8 @@
+{
+  "coverage_target": 0.95,
+  "quantile_threshold": 0.0174,
+  "certain_fraud": 9336,
+  "certain_legit": 116262,
+  "uncertain_review": -7490,
+  "empirical_coverage": 0.921
+}

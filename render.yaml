@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fraudshield-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile.deploy
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8000
+    healthCheckPath: /health

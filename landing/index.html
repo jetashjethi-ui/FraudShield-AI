@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FraudShield AI — Adaptive real-time fraud detection with 25 detection layers, 8 ML models, and conformal prediction.">
+    <title>FraudShield AI — Adaptive Fraud Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --dim: #334155;
+            --blue: #38bdf8;
+            --purple: #a78bfa;
+            --green: #34d399;
+            --red: #f87171;
+            --amber: #fbbf24;
+            --pink: #f472b6;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Animated BG ── */
+        .bg-glow {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(900px circle at 20% 30%, rgba(56,189,248,0.06), transparent 60%),
+                radial-gradient(700px circle at 80% 70%, rgba(167,139,250,0.06), transparent 60%),
+                radial-gradient(500px circle at 50% 50%, rgba(52,211,153,0.03), transparent 50%);
+        }
+        .content { position: relative; z-index: 1; }
+
+        /* ── Nav ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(3,7,18,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 0 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 800; font-size: 1.1rem; color: var(--text);
+            text-decoration: none;
+        }
+        .nav-brand span { font-size: 1.4rem; }
+        .nav-links { display: flex; gap: 8px; }
+        .nav-links a {
+            color: var(--muted); text-decoration: none;
+            font-size: 0.85rem; font-weight: 500;
+            padding: 8px 16px; border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+        .nav-cta {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+            color: white !important;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            padding: 120px 20px 80px;
+            position: relative;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 18px 6px 8px;
+            border-radius: 50px;
+            background: rgba(52,211,153,0.08);
+            border: 1px solid rgba(52,211,153,0.15);
+            font-size: 0.78rem; font-weight: 500;
+            color: var(--green);
+            margin-bottom: 32px;
+            animation: fadeUp 0.8s ease;
+        }
+        .hero-badge-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes fadeUp {
+            from { opacity:0; transform: translateY(20px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            letter-spacing: -2px;
+            max-width: 800px;
+            animation: fadeUp 0.8s ease 0.1s both;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientFlow 4s ease infinite;
+        }
+        @keyframes gradientFlow {
+            0%,100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
+        .hero-sub {
+            font-size: 1.15rem;
+            color: var(--muted);
+            max-width: 560px;
+            line-height: 1.7;
+            margin-top: 20px;
+            animation: fadeUp 0.8s ease 0.2s both;
+        }
+        .hero-actions {
+            display: flex; gap: 12px;
+            margin-top: 40px;
+            animation: fadeUp 0.8s ease 0.3s both;
+        }
+        .btn {
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+            border: none; cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white;
+            box-shadow: 0 4px 24px rgba(124,58,237,0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(124,58,237,0.45);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        /* ── Stats Row ── */
+        .stats-row {
+            display: flex; gap: 2px;
+            margin-top: 60px;
+            animation: fadeUp 0.8s ease 0.4s both;
+        }
+        .stats-row .s {
+            padding: 20px 36px;
+            text-align: center;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .stats-row .s:first-child { border-radius: 14px 0 0 14px; }
+        .stats-row .s:last-child { border-radius: 0 14px 14px 0; }
+        .s-val {
+            font-size: 1.8rem; font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -1px;
+        }
+        .s-lbl {
+            font-size: 0.65rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        /* ── Sections ── */
+        section { padding: 100px 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .section-eyebrow {
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--purple); letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: 2.5rem; font-weight: 800;
+            letter-spacing: -1px; line-height: 1.15;
+        }
+        .section-desc {
+            color: var(--muted); font-size: 1.05rem;
+            max-width: 560px; line-height: 1.7;
+            margin-top: 12px;
+        }
+
+        /* ── Features Grid ── */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 48px;
+        }
+        .feature {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 18px;
+            padding: 28px;
+            transition: all 0.3s;
+        }
+        .feature:hover {
+            border-color: rgba(139,92,246,0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .feature-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+        }
+        .feature h3 {
+            font-size: 1.05rem; font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .feature p {
+            color: var(--muted); font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        /* ── Architecture ── */
+        .arch-flow {
+            display: flex; align-items: center;
+            gap: 0; margin-top: 48px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        .arch-block {
+            flex: 0 0 auto;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            min-width: 200px;
+            text-align: center;
+        }
+        .arch-block-title {
+            font-size: 0.6rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .arch-block-value {
+            font-size: 1.1rem; font-weight: 700;
+            margin-top: 6px;
+        }
+        .arch-arrow {
+            flex: 0 0 auto;
+            color: var(--purple);
+            font-size: 1.5rem;
+            padding: 0 8px;
+        }
+
+        /* ── Models ── */
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 36px;
+        }
+        .model-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .model-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(139,92,246,0.3);
+        }
+        .model-name { font-weight: 700; font-size: 0.9rem; }
+        .model-tag {
+            font-size: 0.65rem; color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── CTA ── */
+        .cta-section {
+            text-align: center;
+            padding: 80px 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .cta-section h2 {
+            font-size: 2.2rem; font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .cta-links {
+            display: flex; justify-content: center;
+            gap: 16px; margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--dim);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .features { grid-template-columns: 1fr; }
+            .models-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-row { flex-wrap: wrap; }
+            .stats-row .s { border-radius: 8px !important; }
+            .arch-flow { flex-wrap: wrap; justify-content: center; }
+            .arch-arrow { transform: rotate(90deg); }
+            nav { padding: 0 16px; }
+            .nav-links a { padding: 8px 10px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="content">
+
+        <!-- Nav -->
+        <nav>
+            <a href="/" class="nav-brand"><span>🛡️</span> FraudShield AI</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#architecture">Architecture</a>
+                <a href="/docs">API Docs</a>
+                <a href="/mobile/" class="nav-cta">Mobile App</a>
+            </div>
+        </nav>
+
+        <!-- Hero -->
+        <div class="hero">
+            <div class="hero-badge">
+                <div class="hero-badge-dot"></div>
+                AUC 0.9776 · Production Ready
+            </div>
+            <h1>
+                <span class="gradient">Adaptive Fraud Detection</span><br>
+                with Risk Intelligence
+            </h1>
+            <p class="hero-sub">
+                25 detection layers, 8 ML models, and conformal prediction —
+                catching fraud that rule-based systems miss, while explaining every decision.
+            </p>
+            <div class="hero-actions">
+                <a href="http://localhost:8501" class="btn btn-primary">🖥️ Open Dashboard</a>
+                <a href="/mobile/" class="btn btn-secondary">📱 Mobile App</a>
+                <a href="/docs" class="btn btn-secondary">📄 API Docs</a>
+            </div>
+
+            <div class="stats-row">
+                <div class="s">
+                    <div class="s-val" style="color:var(--blue)">0.978</div>
+                    <div class="s-lbl">AUC-ROC</div>
+                </div>
+                <div class="s">
+                    <div class="s-val" style="color:var(--purple)">25</div>
+                    <div class="s-lbl">Detection Layers</div>
+                </div>
+                <div class="s">
+                    <div class="s-val" style="color:var(--green)">8</div>
+                    <div class="s-lbl">ML Models</div>
+                </div>
+                <div class="s">
+                    <div class="s-val" style="color:var(--amber)">95%</div>
+                    <div class="s-lbl">Conformal Coverage</div>
+                </div>
+                <div class="s">
+                    <div class="s-val" style="color:var(--pink)">&lt;50ms</div>
+                    <div class="s-lbl">Inference</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <section id="features">
+            <div class="container">
+                <div class="section-eyebrow">Capabilities</div>
+                <div class="section-title">Everything a bank needs.<br>Nothing it doesn't.</div>
+                <div class="section-desc">
+                    From raw transaction to risk decision in milliseconds — with full explainability,
+                    uncertainty quantification, and regulatory compliance.
+                </div>
+
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(56,189,248,0.1)">🧠</div>
+                        <h3>25 Detection Layers</h3>
+                        <p>Velocity, behavioral DNA, graph analysis, peer-group deviation, entropy, lag patterns, and 19 more engineered features.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(167,139,250,0.1)">⚡</div>
+                        <h3>Dual Stacking Ensemble</h3>
+                        <p>XGBoost meta-learner + rank-weighted blend with automatic selection. 7-fold CV with 150 Optuna hyperparameter trials.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(52,211,153,0.1)">📊</div>
+                        <h3>Conformal Prediction</h3>
+                        <p>95% coverage guarantee with isotonic calibration. "Certain Fraud", "Certain Legit", and "Uncertain — Human Review" classifications.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(244,114,182,0.1)">🔬</div>
+                        <h3>Explainability (XAI)</h3>
+                        <p>SHAP feature importance, LIME explanations, and counterfactual analysis — "what would need to change?" for GDPR compliance.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(251,191,36,0.1)">⚖️</div>
+                        <h3>Fairness Audit</h3>
+                        <p>Bias detection across card types, product categories, and demographics. PCI-DSS, RBI, GDPR Art. 22, and EU AI Act compliant.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon" style="background:rgba(248,113,113,0.1)">📉</div>
+                        <h3>Drift Monitoring</h3>
+                        <p>Continuous AUC tracking with automatic retraining alerts when performance degrades below configurable thresholds.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture -->
+        <section id="architecture" style="background:rgba(255,255,255,0.01);">
+            <div class="container">
+                <div class="section-eyebrow">Architecture</div>
+                <div class="section-title">End-to-end pipeline.</div>
+                <div class="section-desc">
+                    From raw transaction data to a 4-tier risk decision with uncertainty quantification.
+                </div>
+
+                <div class="arch-flow">
+                    <div class="arch-block">
+                        <div class="arch-block-title">Input</div>
+                        <div class="arch-block-value">📋 590K Transactions</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block">
+                        <div class="arch-block-title">Feature Engineering</div>
+                        <div class="arch-block-value" style="color:var(--blue)">🔬 25 Layers</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block">
+                        <div class="arch-block-title">Dual Ensemble</div>
+                        <div class="arch-block-value" style="color:var(--purple)">🤖 8 Models</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block">
+                        <div class="arch-block-title">Uncertainty</div>
+                        <div class="arch-block-value" style="color:var(--green)">📊 Conformal</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-block">
+                        <div class="arch-block-title">Decision</div>
+                        <div class="arch-block-value" style="color:var(--amber)">🎯 4-Tier Risk</div>
+                    </div>
+                </div>
+
+                <div class="section-eyebrow" style="margin-top:60px;">Models</div>
+                <div class="models-grid">
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--blue)">XGBoost</div>
+                        <div class="model-tag">GPU Accelerated</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:#2dd4bf">LightGBM</div>
+                        <div class="model-tag">Gradient Boosting</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--pink)">CatBoost</div>
+                        <div class="model-tag">GPU Accelerated</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--green)">Random Forest</div>
+                        <div class="model-tag">Bagging Ensemble</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--purple)">MLP Neural Net</div>
+                        <div class="model-tag">Deep Learning</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--amber)">Isolation Forest</div>
+                        <div class="model-tag">Anomaly Detection</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:#60a5fa">TabNet</div>
+                        <div class="model-tag">GPU · Attention</div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name" style="color:var(--red)">Autoencoder</div>
+                        <div class="model-tag">Deep Anomaly</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <div class="cta-section">
+            <h2>Ready to explore?</h2>
+            <p style="color:var(--muted); margin-top:12px; font-size:1rem;">
+                17-page interactive dashboard · Real-time mobile app · Full REST API
+            </p>
+            <div class="cta-links">
+                <a href="http://localhost:8501" class="btn btn-primary">🖥️ Launch Dashboard</a>
+                <a href="/mobile/" class="btn btn-secondary">📱 Mobile App</a>
+                <a href="/docs" class="btn btn-secondary">📄 Swagger API</a>
+                <a href="/score" class="btn btn-secondary" onclick="return false;">⚡ Score Transaction</a>
+            </div>
+        </div>
+
+        <footer>
+            FRAUDSHIELD AI · BUILT FOR FROSTHACK 2026 · IIT MANDI
+        </footer>
+    </div>
+
+<script>
+// Counter animation for stats
+function animateCounters() {
+    document.querySelectorAll('.s-val').forEach(el => {
+        const text = el.textContent.trim();
+        const isDecimal = text.includes('.');
+        const hasPercent = text.includes('%');
+        const num = parseFloat(text.replace(/[^0-9.]/g, ''));
+        if (isNaN(num)) return;
+        
+        const duration = 1500;
+        const startTime = performance.now();
+        
+        function update(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            const current = num * ease;
+            
+            if (isDecimal) el.textContent = current.toFixed(3);
+            else if (hasPercent) el.textContent = Math.round(current) + '%';
+            else el.textContent = Math.round(current);
+            
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    });
+}
+
+// Intersection observer for scroll animations
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.style.opacity = '1';
+            e.target.style.transform = 'translateY(0)';
+        }
+    });
+}, { threshold: 0.1 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    animateCounters();
+    document.querySelectorAll('.feature, .model-card, .arch-block').forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = `all 0.6s ease ${i * 0.08}s`;
+        observer.observe(el);
+    });
+});
+</script>
+</body>
+</html>

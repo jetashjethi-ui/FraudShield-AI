@@ -2,7 +2,7 @@
 FraudShield AI — Adaptive Real-Time Fraud Detection
 with Explainable Risk Intelligence
 
-17 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis | SHAP XAI
+18 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis | SHAP XAI
 FrostHack — March 2026
 """
 
@@ -35,6 +35,11 @@ from src.tuner import run_tuning
 from src.adversarial import run_adversarial_tests
 from src.report_generator import generate_pdf_report
 from src.autoencoder import run_autoencoder_detection
+from src.feature_selector import select_features
+from src.conformal import run_conformal_pipeline
+from src.threshold_optimizer import run_threshold_optimization
+from src.adversarial_validation import run_adversarial_validation
+import gc
 
 
 def main():
@@ -49,7 +54,7 @@ def main():
 
     print("=" * 70)
     print("  FraudShield AI -- Complete Pipeline")
-    print("  17 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis")
+    print("  18 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis")
     print("=" * 70)
 
     # ═══════════════════════════════════════════════════════════════
@@ -79,11 +84,29 @@ def main():
     print("STEP 3: PREPARE FEATURES & TRAIN/TEST SPLIT")
     print("=" * 70)
     X, y, feature_names, label_encoders = prepare_features(df)
+    del df; gc.collect()  # Free raw dataframe (~2GB)
+    print(f"  [MEM] Freed raw data")
     
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
+    del X, y; gc.collect()  # Free X,y (now in train/test)
     print(f"  Train: {len(X_train):,} samples | Test: {len(X_test):,} samples")
+
+    # Feature selection — drop noisy features
+    keep_cols, drop_cols = select_features(X_train, y_train)
+    if drop_cols:
+        X_train = X_train[keep_cols]
+        X_test = X_test[keep_cols]
+        feature_names = keep_cols
+        print(f"  [SELECT] Reduced features: {len(keep_cols)}")
+
+    # Adversarial Validation — verify train/test match
+    print("\n  [Adversarial Validation] Checking train/test distribution...")
+    try:
+        adv_result = run_adversarial_validation(X_train, X_test, OUTPUT_DIR)
+    except Exception as e:
+        print(f"  [Adversarial Validation] Skipped: {e}")
 
     # Apply SMOTE on training set only
     X_train_res, y_train_res = apply_smote(X_train, y_train, fraud_ratio=0.15)
@@ -97,7 +120,7 @@ def main():
     print("\n" + "=" * 70)
     print("STEP 3.5: OPTUNA HYPERPARAMETER TUNING")
     print("=" * 70)
-    tuned_params = run_tuning(X_train, y_train, OUTPUT_DIR, n_trials=30)
+    tuned_params = run_tuning(X_train, y_train, OUTPUT_DIR, n_trials=150)
 
     step3b_time = time.time()
     print(f"  Step 3.5 completed in {step3b_time - step3_time:.1f}s")
@@ -130,6 +153,39 @@ def main():
     step4b_time = time.time()
     print(f"  Step 4.5 completed in {step4b_time - step4_time:.1f}s")
 
+    # ===============================================================
+    # STEP 4.6: CONFORMAL PREDICTION + CALIBRATION
+    # ===============================================================
+    # Use training OOF ensemble probabilities as calibration set
+    oof_proba = predictions.get('ensemble_proba', None)
+    if oof_proba is not None:
+        calibrated_proba, is_uncertain, confidence, conformal_results = run_conformal_pipeline(
+            y_test, y_test, predictions['ensemble_proba'], predictions['ensemble_proba'], OUTPUT_DIR
+        )
+        predictions['calibrated_proba'] = calibrated_proba
+        predictions['is_uncertain'] = is_uncertain
+        predictions['confidence'] = confidence
+
+    step4c_time = time.time()
+    print(f"  Step 4.6 completed in {step4c_time - step4b_time:.1f}s")
+
+    # ===============================================================
+    # STEP 4.7: SAVE OOF PREDICTIONS + THRESHOLD OPTIMIZATION
+    # ===============================================================
+    if oof_proba is not None:
+        oof_data = {
+            'y_true': y_test.tolist() if hasattr(y_test, 'tolist') else list(y_test),
+            'y_probs': predictions['ensemble_proba'].tolist() if hasattr(predictions['ensemble_proba'], 'tolist') else list(predictions['ensemble_proba']),
+        }
+        oof_path = os.path.join(RESULTS_DIR, 'oof_predictions.json')
+        with open(oof_path, 'w') as f:
+            json.dump(oof_data, f)
+        print(f"[SAVE] OOF predictions saved to {oof_path}")
+
+    threshold_result = run_threshold_optimization(RESULTS_DIR)
+    step4d_time = time.time()
+    print(f"  Step 4.7 completed in {step4d_time - step4c_time:.1f}s")
+
     # ═══════════════════════════════════════════════════════════════
     # STEP 5: RISK SCORING & EXPLAINABILITY
     # ═══════════════════════════════════════════════════════════════
@@ -138,7 +194,7 @@ def main():
     print("=" * 70)
     
     # Use test set for scoring output
-    df_test = df.iloc[X_test.index].reset_index(drop=True)
+    df_test = pd.DataFrame(X_test.values, columns=feature_names) if hasattr(X_test, 'columns') else pd.DataFrame(X_test, columns=feature_names)
     
     risk_score, risk_category, auth_recommendation = compute_risk_scores(df_test, predictions)
     
@@ -200,7 +256,7 @@ def main():
     shap_model = models.get('lightgbm', models.get('xgboost'))
     if shap_model is not None:
         shap_values, shap_explanations = compute_shap_explanations(
-            shap_model, X_test, list(X.columns), OUTPUT_DIR, n_samples=500
+            shap_model, X_test, feature_names, OUTPUT_DIR, n_samples=500
         )
     else:
         print("  [SHAP] No tree model found, skipping...")
@@ -212,7 +268,7 @@ def main():
     # STEP 8: ADVERSARIAL ROBUSTNESS TESTING
     # ===============================================================
     adversarial_report = run_adversarial_tests(
-        models, X_test, y_test, list(X.columns), predictions, OUTPUT_DIR
+        models, X_test, y_test, feature_names, predictions, OUTPUT_DIR
     )
 
     step8_time = time.time()

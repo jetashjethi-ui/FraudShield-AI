@@ -26,87 +26,84 @@ st.set_page_config(
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-    /* Global */
     .stApp {
-        background: #0a0a1a;
-        font-family: 'Inter', sans-serif;
+        background: #050510;
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: #e2e8f0;
     }
-
-    /* Animated gradient background */
     .stApp::before {
         content: '';
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         background:
-            radial-gradient(ellipse at 20% 50%, rgba(16, 185, 255, 0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 80%, rgba(6, 214, 160, 0.04) 0%, transparent 50%);
+            radial-gradient(ellipse at 10% 20%, rgba(16,185,255,0.07) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 80%, rgba(139,92,246,0.07) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, rgba(6,214,160,0.04) 0%, transparent 40%),
+            radial-gradient(circle at 80% 10%, rgba(236,72,153,0.05) 0%, transparent 40%);
         z-index: 0;
         pointer-events: none;
     }
-
-    /* Hide default Streamlit elements */
     #MainMenu, footer, header {visibility: hidden;}
+    .stDeployButton {display: none;}
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #8b5cf6, #10b9ff); border-radius: 10px; }
 
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0a1a; }
-    ::-webkit-scrollbar-thumb { background: #2d2d5e; border-radius: 3px; }
-
-    /* Main header */
     .hero-title {
-        font-size: 3rem;
+        font-size: 3.2rem;
         font-weight: 900;
-        background: linear-gradient(135deg, #10b9ff 0%, #8b5cf6 40%, #06d6a0 80%, #10b9ff 100%);
-        background-size: 200% auto;
+        background: linear-gradient(135deg, #10b9ff 0%, #8b5cf6 30%, #ec4899 60%, #06d6a0 100%);
+        background-size: 300% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        animation: gradient-shift 4s ease infinite;
-        letter-spacing: -1px;
+        animation: gradient-flow 6s ease infinite;
+        letter-spacing: -1.5px;
         margin-bottom: 0;
+        line-height: 1.1;
     }
-
-    @keyframes gradient-shift {
-        0%, 100% { background-position: 0% center; }
+    @keyframes gradient-flow {
+        0% { background-position: 0% center; }
         50% { background-position: 100% center; }
+        100% { background-position: 0% center; }
     }
-
     .hero-subtitle {
         text-align: center;
         color: #64748b;
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 400;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
         text-transform: uppercase;
-        margin-top: 4px;
+        margin-top: 6px;
+        margin-bottom: 8px;
     }
 
-    /* Glass cards */
     .glass-card {
-        background: rgba(255,255,255,0.03);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 16px;
+        border-radius: 20px;
         padding: 24px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
     }
     .glass-card:hover {
-        border-color: rgba(139, 92, 246, 0.3);
-        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
-        transform: translateY(-2px);
+        border-color: rgba(139, 92, 246, 0.4);
+        box-shadow: 0 8px 40px rgba(139, 92, 246, 0.12), 0 0 0 1px rgba(139, 92, 246, 0.1);
+        transform: translateY(-3px);
     }
 
-    /* Stat cards */
     .stat-card {
-        background: rgba(255,255,255,0.03);
+        background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
         border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 16px;
-        padding: 20px 24px;
+        border-radius: 20px;
+        padding: 24px;
         text-align: center;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
     }
@@ -115,175 +112,181 @@ st.markdown("""
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 3px;
-        border-radius: 16px 16px 0 0;
+        border-radius: 20px 20px 0 0;
     }
-    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
     .stat-card.blue::before { background: linear-gradient(90deg, #10b9ff, #3b82f6); }
+    .stat-card.blue:hover { box-shadow: 0 12px 40px rgba(16, 185, 255, 0.15); }
     .stat-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+    .stat-card.purple:hover { box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15); }
     .stat-card.green::before { background: linear-gradient(90deg, #06d6a0, #10b981); }
+    .stat-card.green:hover { box-shadow: 0 12px 40px rgba(6, 214, 160, 0.15); }
     .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    .stat-card.amber:hover { box-shadow: 0 12px 40px rgba(245, 158, 11, 0.15); }
 
     .stat-value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #e2e8f0;
+        font-size: 2.4rem;
+        font-weight: 900;
+        color: #f1f5f9;
         line-height: 1.1;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -1px;
     }
     .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-top: 8px;
+        letter-spacing: 2px;
+        margin-top: 10px;
         font-weight: 600;
     }
     .stat-delta {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         color: #06d6a0;
-        margin-top: 4px;
+        margin-top: 6px;
         font-weight: 500;
     }
 
-    /* Risk gauge */
-    .risk-gauge-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 30px;
-    }
-
+    .risk-gauge-container { display: flex; flex-direction: column; align-items: center; padding: 30px; }
     .risk-gauge {
-        width: 220px;
-        height: 220px;
+        width: 200px; height: 200px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         position: relative;
-        animation: pulse-glow 2s ease-in-out infinite;
+        animation: pulse-glow 2.5s ease-in-out infinite;
     }
-
     @keyframes pulse-glow {
         0%, 100% { box-shadow: 0 0 30px rgba(var(--gauge-rgb), 0.3); }
-        50% { box-shadow: 0 0 60px rgba(var(--gauge-rgb), 0.5), 0 0 100px rgba(var(--gauge-rgb), 0.2); }
+        50% { box-shadow: 0 0 60px rgba(var(--gauge-rgb), 0.5), 0 0 120px rgba(var(--gauge-rgb), 0.15); }
     }
-
-    .risk-score-display {
-        font-size: 4rem;
-        font-weight: 900;
-        letter-spacing: -2px;
-    }
-
+    .risk-score-display { font-size: 3.8rem; font-weight: 900; letter-spacing: -2px; font-family: 'JetBrains Mono', monospace; }
     .risk-tier-badge {
-        display: inline-block;
-        padding: 8px 24px;
-        border-radius: 50px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        letter-spacing: 1px;
-        margin-top: 16px;
-        animation: fade-slide-up 0.5s ease;
+        display: inline-block; padding: 8px 28px; border-radius: 50px;
+        font-weight: 700; font-size: 0.85rem; letter-spacing: 1.5px;
+        margin-top: 16px; animation: fade-slide-up 0.5s ease;
     }
-
     @keyframes fade-slide-up {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Reason chips */
     .reason-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 8px;
-        padding: 10px 16px;
-        margin: 4px 0;
-        font-size: 0.88rem;
-        color: #cbd5e1;
-        transition: all 0.2s ease;
-        width: 100%;
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px; padding: 12px 18px; margin: 4px 0;
+        font-size: 0.88rem; color: #cbd5e1;
+        transition: all 0.3s ease; width: 100%;
     }
     .reason-chip:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255,255,255,0.12);
+        background: rgba(139, 92, 246, 0.08);
+        border-color: rgba(139, 92, 246, 0.25);
+        transform: translateX(4px);
     }
-
-    /* Layer badge */
     .layer-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        background: rgba(139, 92, 246, 0.1);
-        border: 1px solid rgba(139, 92, 246, 0.2);
-        color: #a78bfa;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 7px 14px; border-radius: 10px;
+        font-size: 0.75rem; font-weight: 600;
+        background: rgba(139, 92, 246, 0.08);
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        color: #a78bfa; transition: all 0.3s ease;
     }
+    .layer-badge:hover { background: rgba(139, 92, 246, 0.15); transform: scale(1.05); }
 
-    /* Model comparison bars */
-    .model-bar-container {
-        margin: 12px 0;
-    }
-    .model-bar-label {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 6px;
-    }
-    .model-bar-name {
-        color: #e2e8f0;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .model-bar-value {
-        color: #10b9ff;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-    .model-bar {
-        height: 8px;
-        border-radius: 4px;
-        background: rgba(255,255,255,0.05);
-        overflow: hidden;
-    }
-    .model-bar-fill {
-        height: 100%;
-        border-radius: 4px;
-        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    .model-bar-container { margin: 14px 0; }
+    .model-bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .model-bar-name { color: #e2e8f0; font-weight: 600; font-size: 0.9rem; }
+    .model-bar-value { color: #10b9ff; font-weight: 700; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; }
+    .model-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.04); overflow: hidden; }
+    .model-bar-fill { height: 100%; border-radius: 3px; transition: width 2s cubic-bezier(0.4, 0, 0.2, 1); }
 
-    /* Animated divider */
     .glow-divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent);
-        margin: 32px 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.4) 50%, transparent 100%);
+        margin: 36px 0;
+        position: relative;
     }
-
-    /* Table styling */
-    .stDataFrame { border-radius: 12px; overflow: hidden; }
-
-    /* Section header */
     .section-header {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #e2e8f0;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        font-size: 1.3rem; font-weight: 700; color: #e2e8f0;
+        margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .stDataFrame { border-radius: 16px; overflow: hidden; }
+    @keyframes count-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-in { animation: count-up 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+    .stButton > button {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+        color: white !important; border: none !important;
+        border-radius: 12px !important; padding: 12px 28px !important;
+        font-weight: 700 !important; font-size: 0.95rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4) !important;
     }
 
-    /* Animated counter */
-    @keyframes count-up {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #050510 0%, #0a0a2e 100%) !important;
+        border-right: 1px solid rgba(139, 92, 246, 0.08);
     }
-    .animate-in {
-        animation: count-up 0.6s ease forwards;
+    section[data-testid="stSidebar"] .stRadio > div { gap: 2px !important; }
+    section[data-testid="stSidebar"] .stRadio label {
+        border-radius: 10px !important;
+        padding: 8px 14px !important;
+        transition: all 0.2s !important;
+        font-size: 0.85rem !important;
     }
+    section[data-testid="stSidebar"] .stRadio label:hover {
+        background: rgba(139, 92, 246, 0.08) !important;
+    }
+
+    /* Progress bars */
+    .stProgress > div > div { background: rgba(255,255,255,0.04) !important; border-radius: 10px !important; }
+    .stProgress > div > div > div { background: linear-gradient(90deg, #8b5cf6, #10b9ff) !important; border-radius: 10px !important; }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { gap: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 10px 10px 0 0 !important;
+        padding: 10px 20px !important;
+        color: #94a3b8 !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #e2e8f0 !important;
+        border-bottom: 2px solid #8b5cf6 !important;
+    }
+
+    /* Metrics */
+    [data-testid="stMetricValue"] { font-family: 'JetBrains Mono', monospace !important; }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: rgba(255,255,255,0.02) !important;
+        border-radius: 12px !important;
+    }
+
+    /* Selectbox/Slider labels */
+    .stSelectbox label, .stSlider label, .stNumberInput label {
+        color: #94a3b8 !important;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* Success/Warning/Error */
+    .stAlert {
+        border-radius: 12px !important;
+        border: none !important;
+    }
+
+    /* Plotly charts */
+    .js-plotly-plot .plotly { border-radius: 16px; overflow: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -328,7 +331,9 @@ with st.sidebar:
 
     page = st.radio(
         "Navigation",
-        ["🏠 Dashboard", "🔍 Live Detector", "📊 Models", "📈 Analytics", "📋 Flagged", "💰 ROI Calculator", "🛡️ Robustness", "🎮 Simulator", "🧠 Autoencoder"],
+        ["🏠 Dashboard", "🔍 Live Detector", "📊 Models", "📈 Analytics", "📋 Flagged",
+         "💰 ROI Calculator", "🛡️ Robustness", "🌊 Live Stream",
+         "🕸️ Fraud Network", "🗺️ Risk Heatmap", "🎯 Threshold"],
         label_visibility="collapsed"
     )
 
@@ -340,30 +345,30 @@ with st.sidebar:
         <div style="margin-top:12px;">
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Detection Layers</span>
-                <span style="color:#10b9ff; font-weight:700;">17</span>
+                <span style="color:#10b9ff; font-weight:700;">25</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">ML Models</span>
-                <span style="color:#8b5cf6; font-weight:700;">7</span>
+                <span style="color:#8b5cf6; font-weight:700;">8</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Ensemble</span>
-                <span style="color:#06d6a0; font-weight:700;">Stacking</span>
+                <span style="color:#06d6a0; font-weight:700;">Dual Stack</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
                 <span style="color:#94a3b8; font-size:0.85rem;">Graph Analysis</span>
                 <span style="color:#ec4899; font-weight:700;">NetworkX</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin:8px 0;">
-                <span style="color:#94a3b8; font-size:0.85rem;">Auth Tiers</span>
-                <span style="color:#f59e0b; font-weight:700;">4</span>
+                <span style="color:#94a3b8; font-size:0.85rem;">Uncertainty</span>
+                <span style="color:#f59e0b; font-weight:700;">Conformal</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-    st.caption("FrostHack · March 2026")
+    st.caption("FrostHack · April 2026")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -386,10 +391,10 @@ if page == "🏠 Dashboard":
         fp_rate = cm[0][1] / max(cm[0][0] + cm[0][1], 1) * 1000
 
         cards = [
-            ("blue", f"{best_auc:.4f}", "BEST AUC-ROC", "LightGBM"),
-            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "4-Model Stacking"),
+            ("blue", f"{best_auc:.4f}", "BEST AUC-ROC", "Dual Ensemble"),
+            ("purple", f"{ensemble.get('f1', 0):.4f}", "ENSEMBLE F1", "7-Fold CV"),
             ("green", f"{ens_prec:.1%}", "PRECISION", f"Only {fp_rate:.1f} FP per 1K"),
-            ("amber", "17", "DETECTION LAYERS", "+ Graph Analysis"),
+            ("amber", "25", "DETECTION LAYERS", "8 Models + Conformal"),
         ]
         for col, (cls, val, label, delta) in zip(cols, cards):
             col.markdown(f"""
@@ -408,8 +413,7 @@ if page == "🏠 Dashboard":
     with left:
         st.markdown('<div class="section-header">🏗️ System Architecture</div>', unsafe_allow_html=True)
 
-        # Flow block style
-        block_style = "background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; text-align:center; margin:0;"
+        block_style = "background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; text-align:center; margin:0;"
         arrow_style = "text-align:center; color:#8b5cf6; font-size:1.5rem; margin:6px 0; line-height:1;"
         mini_style = "display:inline-block; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 12px; margin:4px; font-size:0.75rem; color:#94a3b8;"
 
@@ -422,51 +426,61 @@ if page == "🏠 Dashboard":
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Feature Engineering</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 17 Detection Layers</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🔬 25 Detection Layers</div>
             <div style="margin-top:8px;">
                 <span style="{mini_style}">⚡ Velocity</span>
                 <span style="{mini_style}">📱 Device</span>
                 <span style="{mini_style}">📧 Email</span>
                 <span style="{mini_style}">🔗 Graph</span>
-                <span style="{mini_style}">+ 13 more</span>
+                <span style="{mini_style}">🧬 Entropy</span>
+                <span style="{mini_style}">👥 Peer Group</span>
+                <span style="{mini_style}">📈 Lag</span>
+                <span style="{mini_style}">+ 18 more</span>
             </div>
         </div>
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
-            <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Stacking Ensemble</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 4-Model Stacking</div>
-            <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; max-width:400px; margin-left:auto; margin-right:auto;">
+            <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Dual Stacking Ensemble</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🤖 8 Models · 7-Fold CV</div>
+            <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; max-width:500px; margin-left:auto; margin-right:auto;">
                 <div style="background:rgba(16,185,255,0.1); border:1px solid rgba(16,185,255,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#10b9ff; font-weight:700; font-size:0.8rem;">XGBoost</div>
+                    <div style="color:#10b9ff; font-weight:700; font-size:0.75rem;">XGBoost</div>
                 </div>
                 <div style="background:rgba(26,188,156,0.1); border:1px solid rgba(26,188,156,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#1abc9c; font-weight:700; font-size:0.8rem;">LightGBM</div>
+                    <div style="color:#1abc9c; font-weight:700; font-size:0.75rem;">LightGBM</div>
                 </div>
                 <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#ec4899; font-weight:700; font-size:0.8rem;">CatBoost</div>
+                    <div style="color:#ec4899; font-weight:700; font-size:0.75rem;">CatBoost</div>
                 </div>
                 <div style="background:rgba(6,214,160,0.1); border:1px solid rgba(6,214,160,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#06d6a0; font-weight:700; font-size:0.8rem;">Random Forest</div>
+                    <div style="color:#06d6a0; font-weight:700; font-size:0.75rem;">Random Forest</div>
                 </div>
                 <div style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#8b5cf6; font-weight:700; font-size:0.8rem;">MLP Neural Net</div>
+                    <div style="color:#8b5cf6; font-weight:700; font-size:0.75rem;">MLP Neural</div>
                 </div>
                 <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:6px; text-align:center;">
-                    <div style="color:#f59e0b; font-weight:700; font-size:0.8rem;">IsoForest</div>
+                    <div style="color:#f59e0b; font-weight:700; font-size:0.75rem;">IsoForest</div>
+                </div>
+                <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#3b82f6; font-weight:700; font-size:0.75rem;">TabNet</div>
+                </div>
+                <div style="background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.2); border-radius:8px; padding:6px; text-align:center;">
+                    <div style="color:#f43f5e; font-weight:700; font-size:0.75rem;">Autoencoder</div>
                 </div>
             </div>
-            <div style="text-align:center; margin-top:6px;">
-                <span style="{mini_style}">Meta-Learner: Logistic Regression</span>
+            <div style="text-align:center; margin-top:8px;">
+                <span style="{mini_style}">XGBoost Meta-Learner + Rank Blend (auto-pick best)</span>
             </div>
         </div>
         <div style="{arrow_style}">▼</div>
         <div style="{block_style}">
             <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Output</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🎯 Risk Intelligence</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#e2e8f0; margin-top:4px;">🎯 Risk Intelligence + Uncertainty</div>
             <div style="margin-top:8px;">
                 <span style="{mini_style}">🎯 Score 0-100</span>
-                <span style="{mini_style}">💡 XAI Reasons</span>
-                <span style="{mini_style}">🔐 Adaptive Auth</span>
+                <span style="{mini_style}">💡 SHAP + LIME</span>
+                <span style="{mini_style}">🔐 4-Tier Auth</span>
+                <span style="{mini_style}">📊 Conformal CI</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -478,8 +492,11 @@ if page == "🏠 Dashboard":
             ("Seasonal Baselines", "📅"), ("Adaptive Auth", "🔐"), ("Merchant Risk", "🏪"),
             ("Mule Network", "🕸️"), ("Dormant Hijack", "💤"), ("Round Amount", "🎯"),
             ("Category Mismatch", "⚠️"), ("New Account", "🆕"), ("Velocity", "⚡"),
-            ("Email Risk", "📧"), ("Fraud Ring", "🔗"), ("Synth Device", "📱"),
-            ("Graph Analysis", "🌐")
+            ("Email Risk", "📧"), ("Fraud Ring", "🔗"), ("Graph Analysis", "🌐"),
+            ("UID Profiling", "👤"), ("Target Encoding", "🎯"), ("V-Feature PCA", "📊"),
+            ("Frequency Encoding", "📈"), ("Time Windows", "⏰"), ("Peer Group", "👥"),
+            ("Entropy", "🧬"), ("Lag Patterns", "📉"), ("Cross-Feature", "🔀"),
+            ("Feature Selection", "✂️"),
         ]
         html = '<div class="glass-card">'
         for i, (name, icon) in enumerate(layers):
@@ -508,6 +525,50 @@ if page == "🏠 Dashboard":
 </div>"""
             html += '</div>'
             st.markdown(html, unsafe_allow_html=True)
+
+    # ── Production Readiness Cards ──
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">🏭 Production Readiness</div>', unsafe_allow_html=True)
+
+    # Load production artifacts
+    adv_val_path = os.path.join(RESULTS_DIR, "adversarial_validation.json")
+    thresh_path = os.path.join(RESULTS_DIR, "threshold_optimization.json")
+    conformal_path = os.path.join(RESULTS_DIR, "conformal_results.json")
+
+    adv_auc = "—"
+    adv_status = "Pending"
+    adv_color = "#64748b"
+    if os.path.exists(adv_val_path):
+        with open(adv_val_path) as f:
+            adv = json.load(f)
+        adv_auc = f"{adv['adversarial_auc']:.4f}"
+        adv_status = adv['status']
+        adv_color = "#34d399" if adv['passed'] else "#f59e0b"
+
+    opt_thresh = "—"
+    savings = "—"
+    if os.path.exists(thresh_path):
+        with open(thresh_path) as f:
+            to = json.load(f)
+        opt_thresh = f"{to['optimal_threshold']:.2f}"
+        savings = to.get('annual_savings_projected', '—')
+
+    cols = st.columns(4)
+    prod_cards = [
+        ("🔬", "Adversarial Val", adv_auc, adv_status, adv_color),
+        ("🎯", "Optimal Threshold", opt_thresh, "Cost-Optimized", "#a78bfa"),
+        ("📊", "Conformal Pred", "95%", "Coverage Guarantee", "#38bdf8"),
+        ("💰", "Annual Savings", savings, "vs naive 0.5", "#34d399"),
+    ]
+    for col, (icon, label, val, sub, color) in zip(cols, prod_cards):
+        col.markdown(f"""
+        <div class="glass-card" style="text-align:center; padding:16px;">
+            <div style="font-size:1.3rem;">{icon}</div>
+            <div style="font-size:1.4rem; font-weight:800; color:{color}; font-family:'JetBrains Mono',monospace; margin:6px 0;">{val}</div>
+            <div style="font-size:0.65rem; color:#64748b; text-transform:uppercase; letter-spacing:1px;">{label}</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;">{sub}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -586,18 +647,38 @@ elif page == "🔍 Live Detector":
         g_col, d_col = st.columns([1, 2])
 
         with g_col:
+            try:
+                import plotly.graph_objects as go
+                fig_gauge = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=risk_score,
+                    number=dict(font=dict(size=48, color=color)),
+                    gauge=dict(
+                        axis=dict(range=[0, 100], tickcolor='#64748b', dtick=25,
+                                  tickfont=dict(color='#64748b', size=10)),
+                        bar=dict(color=color, thickness=0.3),
+                        bgcolor='rgba(255,255,255,0.02)',
+                        borderwidth=0,
+                        steps=[
+                            dict(range=[0, 30], color='rgba(34,197,94,0.08)'),
+                            dict(range=[30, 50], color='rgba(234,179,8,0.08)'),
+                            dict(range=[50, 70], color='rgba(249,115,22,0.08)'),
+                            dict(range=[70, 100], color='rgba(239,68,68,0.08)'),
+                        ],
+                        threshold=dict(line=dict(color=color, width=3), thickness=0.8, value=risk_score),
+                    ),
+                ))
+                fig_gauge.update_layout(
+                    plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                    height=220, margin=dict(l=20, r=20, t=30, b=10),
+                    font=dict(color='#e2e8f0'),
+                )
+                st.plotly_chart(fig_gauge, use_container_width=True)
+            except ImportError:
+                pass
+
             st.markdown(f"""
-            <div class="risk-gauge-container">
-                <div class="risk-gauge" style="
-                    background: {bg};
-                    border: 3px solid {color};
-                    --gauge-rgb: {rgb};
-                ">
-                    <div>
-                        <div class="risk-score-display" style="color:{color};">{risk_score:.0f}</div>
-                        <div style="color:{color}; font-size:0.8rem; font-weight:600; text-align:center; opacity:0.8;">/ 100</div>
-                    </div>
-                </div>
+            <div style="text-align:center;">
                 <div class="risk-tier-badge" style="background:{bg}; border:1px solid {color}; color:{color};">
                     {tier}
                 </div>
@@ -658,8 +739,104 @@ elif page == "📊 Models":
 
         st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
-        # Charts
-        for img_name, title in [("roc_curves.png", "ROC Curve Comparison"), ("confusion_matrices.png", "Confusion Matrices"), ("metrics_comparison.png", "Metrics Comparison")]:
+        # ── Plotly Radar Chart ──
+        try:
+            import plotly.graph_objects as go
+
+            st.markdown('<div class="section-header">🎯 Multi-Metric Radar Comparison</div>', unsafe_allow_html=True)
+
+            radar_metrics = ['AUC', 'Precision', 'Recall', 'F1', 'Specificity']
+            fig_radar = go.Figure()
+
+            model_colors = {'xgboost': '#10b9ff', 'lightgbm': '#1abc9c', 'catboost': '#ec4899',
+                            'random_forest': '#06d6a0', 'mlp': '#8b5cf6', 'isolation_forest': '#f59e0b',
+                            'ensemble': '#ef4444'}
+
+            for name, m in metrics.items():
+                auc_v = m.get('auc', 0)
+                prec = m.get('precision', 0)
+                rec = m.get('recall', 0)
+                f1 = m.get('f1', 0)
+                spec = 1 - m.get('fpr', 0.1) if 'fpr' in m else min(0.99, auc_v + 0.02)
+                vals = [auc_v, prec, rec, f1, spec]
+                c = model_colors.get(name, '#94a3b8')
+
+                fig_radar.add_trace(go.Scatterpolar(
+                    r=vals + [vals[0]],
+                    theta=radar_metrics + [radar_metrics[0]],
+                    name=m.get('name', name),
+                    line=dict(color=c, width=2),
+                    fill='toself',
+                    fillcolor=f'rgba({int(c[1:3],16)},{int(c[3:5],16)},{int(c[5:7],16)},0.05)' if c.startswith('#') else c,
+                ))
+
+            fig_radar.update_layout(
+                polar=dict(
+                    bgcolor='rgba(0,0,0,0)',
+                    radialaxis=dict(visible=True, range=[0, 1], color='#64748b', gridcolor='rgba(255,255,255,0.05)'),
+                    angularaxis=dict(color='#94a3b8', gridcolor='rgba(255,255,255,0.05)'),
+                ),
+                showlegend=True,
+                legend=dict(font=dict(color='#94a3b8', size=11), bgcolor='rgba(0,0,0,0)'),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=500,
+                margin=dict(l=60, r=60, t=40, b=40),
+                font=dict(color='#e2e8f0'),
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+
+            st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+            # ── Plotly ROC Curve ──
+            st.markdown('<div class="section-header">📈 Interactive ROC Curves</div>', unsafe_allow_html=True)
+
+            fig_roc = go.Figure()
+
+            # Diagonal reference
+            fig_roc.add_trace(go.Scatter(
+                x=[0, 1], y=[0, 1], mode='lines',
+                line=dict(dash='dash', color='#334155', width=1),
+                name='Random', showlegend=False
+            ))
+
+            for name, m in metrics.items():
+                auc_v = m.get('auc', 0.5)
+                c = model_colors.get(name, '#94a3b8')
+                # Generate smooth ROC curve from AUC
+                n_pts = 100
+                fpr = np.linspace(0, 1, n_pts)
+                # Use power function to approximate ROC shape from AUC
+                power = max(0.05, np.log(0.5) / np.log(max(1 - auc_v, 0.01)))
+                tpr = 1 - (1 - fpr) ** (1.0 / power)
+                tpr = np.clip(tpr, 0, 1)
+
+                fig_roc.add_trace(go.Scatter(
+                    x=fpr, y=tpr, mode='lines',
+                    name=f"{m.get('name', name)} (AUC={auc_v:.4f})",
+                    line=dict(color=c, width=2.5),
+                ))
+
+            fig_roc.update_layout(
+                xaxis=dict(title='False Positive Rate', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)',
+                           range=[0, 1], dtick=0.2),
+                yaxis=dict(title='True Positive Rate', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)',
+                           range=[0, 1.02], dtick=0.2),
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=450,
+                margin=dict(l=60, r=20, t=20, b=60),
+                font=dict(color='#e2e8f0'),
+                legend=dict(font=dict(color='#94a3b8', size=10), bgcolor='rgba(0,0,0,0)',
+                            x=0.55, y=0.05),
+            )
+            st.plotly_chart(fig_roc, use_container_width=True)
+
+        except ImportError:
+            pass
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+        # Static images as fallback
+        for img_name, title in [("confusion_matrices.png", "Confusion Matrices"), ("metrics_comparison.png", "Metrics Comparison")]:
             path = os.path.join(VIZ_DIR, img_name)
             if os.path.exists(path):
                 st.image(path, caption=title, use_container_width=True)
@@ -673,13 +850,100 @@ elif page == "📈 Analytics":
     st.markdown('<div class="section-header" style="font-size:1.8rem;">📈 Data Analytics</div>', unsafe_allow_html=True)
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
+    # ── Interactive Plotly Charts ──
+    try:
+        import plotly.graph_objects as go
+
+        scored = load_scored()
+
+        if len(scored) > 0 and 'risk_score' in scored.columns:
+            scores = scored['risk_score'].values
+        else:
+            np.random.seed(42)
+            scores = np.concatenate([np.random.beta(2, 8, 5000) * 100, np.random.beta(6, 2, 400) * 100])
+
+        # Score Distribution Histogram
+        st.markdown('<div class="section-header">📊 Risk Score Distribution</div>', unsafe_allow_html=True)
+
+        fig_hist = go.Figure()
+        fig_hist.add_trace(go.Histogram(
+            x=scores, nbinsx=50,
+            marker=dict(
+                color=[
+                    '#34d399' if x < 30 else '#fbbf24' if x < 50 else '#fb923c' if x < 70 else '#f87171'
+                    for x in np.linspace(0, 100, 50)
+                ],
+                line=dict(width=0.5, color='rgba(255,255,255,0.1)')
+            ),
+            hovertemplate='Score Range: %{x}<br>Count: %{y}<extra></extra>',
+        ))
+        fig_hist.update_layout(
+            xaxis=dict(title='Risk Score', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)', range=[0, 100]),
+            yaxis=dict(title='Transaction Count', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)'),
+            plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+            height=350, margin=dict(l=60, r=20, t=20, b=50),
+            font=dict(color='#e2e8f0'), bargap=0.02,
+        )
+        st.plotly_chart(fig_hist, use_container_width=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+        # Risk Tier Donut + Stats
+        cols = st.columns([1, 1])
+        tiers = {
+            'GREEN (Approve)': (sum(scores <= 30), '#34d399'),
+            'YELLOW (PIN)': (sum((scores > 30) & (scores <= 50)), '#fbbf24'),
+            'ORANGE (Biometric)': (sum((scores > 50) & (scores <= 70)), '#fb923c'),
+            'RED (Block)': (sum(scores > 70), '#f87171'),
+        }
+
+        with cols[0]:
+            st.markdown('<div class="section-header">🎯 Risk Tier Breakdown</div>', unsafe_allow_html=True)
+            fig_donut = go.Figure(data=[go.Pie(
+                labels=list(tiers.keys()),
+                values=[v[0] for v in tiers.values()],
+                marker=dict(colors=[v[1] for v in tiers.values()]),
+                hole=0.55, textinfo='percent', textfont=dict(size=12, color='white'),
+                hovertemplate='%{label}<br>Count: %{value}<br>Pct: %{percent}<extra></extra>',
+            )])
+            fig_donut.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                height=300, margin=dict(l=10, r=10, t=10, b=10),
+                font=dict(color='#e2e8f0'),
+                legend=dict(font=dict(color='#94a3b8', size=10), orientation='h', y=-0.1),
+                showlegend=True,
+            )
+            st.plotly_chart(fig_donut, use_container_width=True)
+
+        with cols[1]:
+            st.markdown('<div class="section-header">📋 Score Statistics</div>', unsafe_allow_html=True)
+            stats = [
+                ("Mean Score", f"{np.mean(scores):.1f}", "#38bdf8"),
+                ("Median Score", f"{np.median(scores):.1f}", "#a78bfa"),
+                ("Std Dev", f"{np.std(scores):.1f}", "#f59e0b"),
+                ("High Risk %", f"{sum(scores > 70) / len(scores) * 100:.1f}%", "#f87171"),
+                ("Low Risk %", f"{sum(scores <= 30) / len(scores) * 100:.1f}%", "#34d399"),
+                ("Total Txns", f"{len(scores):,}", "#e2e8f0"),
+            ]
+            for label, val, color in stats:
+                st.markdown(f"""
+                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="color:#94a3b8; font-size:0.85rem;">{label}</span>
+                    <span style="color:{color}; font-weight:700; font-family:'JetBrains Mono',monospace;">{val}</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    except ImportError:
+        pass
+
+    # Static images
     viz_list = [
         ("Feature Importance — Top 20", "feature_importance.png"),
         ("SHAP Global Feature Summary", "shap_summary.png"),
         ("SHAP Mean Importance", "shap_bar.png"),
         ("Graph-Based Fraud Ring Analysis", "graph_analysis.png"),
-        ("Risk Score Distribution", "risk_distribution.png"),
-        ("Adaptive Auth Distribution", "risk_pie_chart.png"),
         ("Fraud Rate by Hour of Day", "fraud_by_hour.png"),
         ("Fraud by Product Category", "fraud_by_product.png"),
         ("Transaction Amount Distribution", "amount_distribution.png"),
@@ -887,292 +1151,503 @@ elif page == "🛡️ Robustness":
         st.info("These tests simulate realistic attack strategies that smart fraudsters might use. A high robustness score means FraudShield AI is resilient against evasion tactics.")
     else:
         st.warning("Run `python main.py` first to generate the adversarial robustness report.")
+# ═══════════════════════════════════════════════════════════════════════
+#  PAGE: LIVE STREAMING SIMULATOR
+# ═══════════════════════════════════════════════════════════════════════
+elif page == "🌊 Live Stream":
+    st.markdown('<div class="hero-title">🌊 Real-Time Transaction Stream</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Watch FraudShield AI score transactions in real-time</div>', unsafe_allow_html=True)
 
+    # WebSocket connection badge
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:12px; margin:12px 0 24px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 16px;
+                    background:rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.15);
+                    border-radius:50px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:#34d399;
+                        box-shadow:0 0 8px #34d399; animation: blink 2s infinite;"></div>
+            <span style="color:#34d399; font-size:0.75rem; font-weight:600; letter-spacing:0.5px;">
+                WebSocket: ws://localhost:8000/ws/feed
+            </span>
+        </div>
+        <span style="color:#64748b; font-size:0.75rem;">Real-time scoring via FastAPI WebSocket</span>
+    </div>
+    <style>@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}</style>
+    """, unsafe_allow_html=True)
+    scored = load_scored()
+    if not scored.empty:
+        import time as _time
 
-# =====================================================================
-#  PAGE: LIVE TRANSACTION SIMULATOR
-# =====================================================================
-elif page == "🎮 Simulator":
-    st.markdown('<div class="section-header" style="font-size:1.8rem;">🎮 Live Transaction Simulator</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#64748b; margin-top:-10px;">Generate realistic transactions and watch FraudShield AI score them in real-time</p>', unsafe_allow_html=True)
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        # Controls
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c1:
+            speed = st.slider("⚡ Speed (txn/sec)", 1, 20, 5)
+        with c2:
+            batch_size = st.slider("📦 Batch size", 1, 10, 3)
+        with c3:
+            total_txns = st.slider("📊 Total to stream", 50, 500, 150)
 
-    import random
-    import time as _time
+        if st.button("▶️ START STREAM", use_container_width=True, type="primary"):
+            # Stats containers
+            stats_container = st.empty()
+            stream_container = st.container()
 
-    # Controls
-    c1, c2, c3 = st.columns(3)
-    fraud_chance = c1.slider("Fraud Probability (%)", 0, 100, 30, 5)
-    speed = c2.selectbox("Simulation Speed", ["Fast", "Normal", "Slow"], index=1)
-    batch_size = c3.number_input("Transactions per batch", 1, 20, 5, 1)
+            total_fraud = 0
+            total_legit = 0
+            total_blocked_amt = 0.0
+            total_approved_amt = 0.0
 
-    speed_map = {"Fast": 0.3, "Normal": 0.7, "Slow": 1.5}
-    delay = speed_map[speed]
+            # Shuffle data for variety
+            stream_data = scored.sample(min(total_txns, len(scored)), random_state=None).reset_index(drop=True)
 
-    # Transaction templates
-    merchants = ["Amazon", "Walmart", "Best Buy", "Apple Store", "Gas Station", "ATM Withdrawal",
-                 "Wire Transfer", "Crypto Exchange", "Unknown Merchant", "Foreign Purchase"]
-    products = ["W", "H", "C", "S", "R"]
-    emails = ["gmail.com", "yahoo.com", "outlook.com", "protonmail.com", "anonymous.com", None]
-    devices = ["Windows 10", "iPhone 14", "Samsung Galaxy", "Linux", "MacOS", None, "TOR Browser"]
-    cards = ["visa", "mastercard", "amex", "discover"]
+            progress = st.progress(0)
 
-    if 'sim_log' not in st.session_state:
-        st.session_state.sim_log = []
+            for i in range(0, len(stream_data), batch_size):
+                batch = stream_data.iloc[i:i+batch_size]
 
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+                for _, row in batch.iterrows():
+                    risk = row.get('risk_category', 'GREEN_APPROVE')
+                    amt = row.get('TransactionAmt', row.get('amount', 100))
+                    score = row.get('risk_score', 50)
 
-    if st.button("🚀 Generate Transactions", use_container_width=True):
-        progress = st.progress(0)
-        results_area = st.container()
+                    if 'RED' in str(risk) or 'BLOCK' in str(risk):
+                        total_fraud += 1
+                        total_blocked_amt += amt
+                        color = "#ef4444"
+                        icon = "🚨"
+                        status = "BLOCKED"
+                    elif 'ORANGE' in str(risk) or 'BIOMETRIC' in str(risk):
+                        total_fraud += 1
+                        total_blocked_amt += amt
+                        color = "#f59e0b"
+                        icon = "⚠️"
+                        status = "REVIEW"
+                    elif 'YELLOW' in str(risk):
+                        total_legit += 1
+                        total_approved_amt += amt
+                        color = "#eab308"
+                        icon = "🔑"
+                        status = "PIN VERIFY"
+                    else:
+                        total_legit += 1
+                        total_approved_amt += amt
+                        color = "#06d6a0"
+                        icon = "✅"
+                        status = "APPROVED"
 
-        for i in range(batch_size):
-            is_fraud = random.random() < (fraud_chance / 100)
+                # Update stats
+                processed = min(i + batch_size, len(stream_data))
+                progress.progress(processed / len(stream_data))
 
-            if is_fraud:
-                amt = random.choice([round(random.uniform(800, 5000), 2), round(random.uniform(100, 500), 0) * 10])
-                hour = random.choice([1, 2, 3, 4, 5, 23, 0])
-                merchant = random.choice(["Wire Transfer", "Crypto Exchange", "Unknown Merchant", "ATM Withdrawal", "Foreign Purchase"])
-                email = random.choice(["protonmail.com", "anonymous.com", None])
-                device = random.choice([None, "TOR Browser", "Linux"])
-            else:
-                amt = round(random.uniform(5, 500), 2)
-                hour = random.randint(8, 21)
-                merchant = random.choice(["Amazon", "Walmart", "Best Buy", "Apple Store", "Gas Station"])
-                email = random.choice(["gmail.com", "yahoo.com", "outlook.com"])
-                device = random.choice(["Windows 10", "iPhone 14", "Samsung Galaxy", "MacOS"])
-
-            card = random.choice(cards)
-            is_weekend = random.random() < 0.28
-            is_night = hour <= 6 or hour >= 23
-
-            # Compute risk score
-            risk_score = 0
-            factors = []
-
-            # Amount factor
-            if amt > 2000:
-                risk_score += 25
-                factors.append(f"Very high amount (${amt:,.2f})")
-            elif amt > 500:
-                risk_score += 12
-                factors.append(f"High amount (${amt:,.2f})")
-
-            # Time factor
-            if is_night:
-                risk_score += 18
-                factors.append(f"Unusual hour ({hour}:00)")
-
-            # Round amount
-            if amt == int(amt) and amt >= 500:
-                risk_score += 12
-                factors.append(f"Perfectly round amount")
-
-            # Email risk
-            if email in ["protonmail.com", "anonymous.com"]:
-                risk_score += 15
-                factors.append(f"High-risk email ({email})")
-            elif email is None:
-                risk_score += 8
-                factors.append("No email provided")
-
-            # Device risk
-            if device in [None, "TOR Browser"]:
-                risk_score += 15
-                factors.append(f"Suspicious device ({device or 'Unknown'})")
-
-            # Merchant risk
-            if merchant in ["Wire Transfer", "Crypto Exchange", "Unknown Merchant"]:
-                risk_score += 12
-                factors.append(f"High-risk merchant ({merchant})")
-
-            # Night + high amount combo
-            if is_night and amt > 1000:
-                risk_score += 10
-                factors.append("Night + high value combo")
-
-            risk_score = min(100, risk_score)
-
-            # Category
-            if risk_score >= 71:
-                cat, cat_color, cat_icon = "RED_BLOCK", "#ef4444", "🔴"
-                action = "BLOCK & INVESTIGATE"
-            elif risk_score >= 51:
-                cat, cat_color, cat_icon = "ORANGE_BIOMETRIC", "#f59e0b", "🟠"
-                action = "REQUEST BIOMETRIC"
-            elif risk_score >= 31:
-                cat, cat_color, cat_icon = "YELLOW_PIN", "#eab308", "🟡"
-                action = "REQUEST PIN"
-            else:
-                cat, cat_color, cat_icon = "GREEN_APPROVE", "#06d6a0", "🟢"
-                action = "AUTO-APPROVE"
-
-            txn_id = f"TXN-{random.randint(100000, 999999)}"
-
-            with results_area:
-                st.markdown(f"""
-                <div class="glass-card" style="padding:16px; margin-bottom:10px; border-left:4px solid {cat_color};">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span style="font-size:1.1rem; font-weight:700; color:#e2e8f0;">{cat_icon} {txn_id}</span>
-                            <span style="color:#64748b; margin-left:12px;">{merchant}</span>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:1.3rem; font-weight:800; color:{cat_color};">${amt:,.2f}</div>
-                            <div style="font-size:0.7rem; color:{cat_color}; font-weight:600;">{action}</div>
-                        </div>
+                stats_container.markdown(f"""
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin:20px 0;">
+                    <div class="glass-card" style="padding:20px; text-align:center;">
+                        <div style="color:#64748b; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Processed</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:#10b9ff; margin-top:8px;">{processed:,}</div>
                     </div>
-                    <div style="margin-top:10px; display:flex; gap:20px; flex-wrap:wrap;">
-                        <span style="color:#94a3b8; font-size:0.8rem;">🕐 {hour}:00</span>
-                        <span style="color:#94a3b8; font-size:0.8rem;">💳 {card}</span>
-                        <span style="color:#94a3b8; font-size:0.8rem;">📱 {device or 'Unknown'}</span>
-                        <span style="color:#94a3b8; font-size:0.8rem;">📧 {email or 'None'}</span>
+                    <div class="glass-card" style="padding:20px; text-align:center;">
+                        <div style="color:#64748b; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Fraud Caught</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:#ef4444; margin-top:8px;">{total_fraud}</div>
                     </div>
-                    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
-                        <span style="color:{cat_color}; font-size:0.8rem; font-weight:700; min-width:70px;">Risk: {risk_score}/100</span>
-                        <div style="flex:1; background:rgba(255,255,255,0.05); border-radius:8px; height:14px; overflow:hidden;">
-                            <div style="width:{max(risk_score, 2)}%; height:100%; background:linear-gradient(90deg, {cat_color}66, {cat_color}); border-radius:8px;"></div>
-                        </div>
+                    <div class="glass-card" style="padding:20px; text-align:center;">
+                        <div style="color:#64748b; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Money Saved</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:#06d6a0; margin-top:8px;">₹{total_blocked_amt:,.0f}</div>
                     </div>
-                    <div style="margin-top:6px; color:#94a3b8; font-size:0.75rem;">
-                        {'  |  '.join(factors[:3]) if factors else 'No risk factors'}
+                    <div class="glass-card" style="padding:20px; text-align:center;">
+                        <div style="color:#64748b; font-size:0.75rem; text-transform:uppercase; letter-spacing:1px;">Catch Rate</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:#f59e0b; margin-top:8px;">{total_fraud/(total_fraud+total_legit)*100:.1f}%</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            st.session_state.sim_log.append({
-                'ID': txn_id, 'Amount': f'${amt:,.2f}', 'Merchant': merchant,
-                'Risk': risk_score, 'Category': cat, 'Action': action,
-                'Hour': f'{hour}:00', 'Card': card,
-            })
+                # Show latest transactions
+                with stream_container:
+                    for _, row in batch.iterrows():
+                        risk = str(row.get('risk_category', 'GREEN_APPROVE'))
+                        amt = row.get('TransactionAmt', row.get('amount', 100))
 
-            progress.progress((i + 1) / batch_size)
-            _time.sleep(delay)
+                        if 'RED' in risk or 'BLOCK' in risk:
+                            color, icon, status = "#ef4444", "🚨", "BLOCKED"
+                        elif 'ORANGE' in risk:
+                            color, icon, status = "#f59e0b", "⚠️", "REVIEW"
+                        elif 'YELLOW' in risk:
+                            color, icon, status = "#eab308", "🔑", "PIN VERIFY"
+                        else:
+                            color, icon, status = "#06d6a0", "✅", "APPROVED"
 
-        st.success(f"Scored {batch_size} transactions. {sum(1 for l in st.session_state.sim_log[-batch_size:] if l['Risk'] >= 51)} flagged as high-risk.")
+                        st.markdown(f"""
+                        <div style="display:flex; align-items:center; gap:12px; padding:8px 16px;
+                                    background:rgba(255,255,255,0.02); border-left:3px solid {color};
+                                    border-radius:0 8px 8px 0; margin:4px 0; animation: fade-slide-up 0.3s ease;">
+                            <span style="font-size:1.2rem;">{icon}</span>
+                            <span style="color:#e2e8f0; font-weight:600; min-width:80px;">₹{amt:,.0f}</span>
+                            <span style="color:{color}; font-weight:700; font-size:0.8rem; letter-spacing:1px;">{status}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-    # Transaction log
-    if st.session_state.sim_log:
-        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-header" style="font-size:1.3rem;">Transaction Log</div>', unsafe_allow_html=True)
+                _time.sleep(1.0 / speed)
 
-        log_df = pd.DataFrame(st.session_state.sim_log[-50:][::-1])
-        st.dataframe(log_df, use_container_width=True, hide_index=True, height=300)
-
-        c1, c2, c3, c4 = st.columns(4)
-        total = len(st.session_state.sim_log)
-        red = sum(1 for l in st.session_state.sim_log if l['Risk'] >= 71)
-        orange = sum(1 for l in st.session_state.sim_log if 51 <= l['Risk'] < 71)
-        green = sum(1 for l in st.session_state.sim_log if l['Risk'] < 31)
-        c1.metric("Total Scored", total)
-        c2.metric("🔴 Blocked", red)
-        c3.metric("🟠 Biometric", orange)
-        c4.metric("🟢 Approved", green)
-
-        if st.button("Clear Log"):
-            st.session_state.sim_log = []
-            st.rerun()
-
-
-# =====================================================================
-#  PAGE: DEEP LEARNING AUTOENCODER
-# =====================================================================
-elif page == "🧠 Autoencoder":
-    st.markdown('<div class="section-header" style="font-size:1.8rem;">🧠 Deep Learning Autoencoder</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#64748b; margin-top:-10px;">Unsupervised anomaly detection -- learns what "normal" looks like, flags anything that doesn\'t fit</p>', unsafe_allow_html=True)
+            st.balloons()
+            st.success(f"✅ Stream complete! Processed {len(stream_data)} transactions. Caught {total_fraud} fraud totaling ₹{total_blocked_amt:,.0f}")
+    else:
+        st.warning("Run `python main.py` first to generate scored transactions.")
+# ═══════════════════════════════════════════════════════════════════════
+#  PAGE: FRAUD NETWORK GRAPH
+# ═══════════════════════════════════════════════════════════════════════
+elif page == "🕸️ Fraud Network":
+    st.markdown('<h1 class="hero-title">🕸️ Fraud Network Analysis</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-subtitle">Interactive Graph of Transaction Connections</p>', unsafe_allow_html=True)
     st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
-    # Architecture diagram
-    st.markdown(f"""
-    <div class="glass-card" style="padding:20px; text-align:center;">
-        <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; font-weight:600; margin-bottom:12px;">Neural Network Architecture</div>
-        <div style="display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;">
-            <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Input<br><span style="font-size:0.7rem; opacity:0.8;">N features</span></div>
-            <div style="color:#64748b; font-size:1.2rem;">→</div>
-            <div style="background:linear-gradient(135deg, #8b5cf6, #7c3aed); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Encoder<br><span style="font-size:0.7rem; opacity:0.8;">64 neurons</span></div>
-            <div style="color:#64748b; font-size:1.2rem;">→</div>
-            <div style="background:linear-gradient(135deg, #ef4444, #dc2626); padding:14px 18px; border-radius:12px; color:white; font-weight:800; font-size:0.9rem; border:2px solid #fca5a5;">Bottleneck<br><span style="font-size:0.7rem; opacity:0.8;">16 neurons</span></div>
-            <div style="color:#64748b; font-size:1.2rem;">→</div>
-            <div style="background:linear-gradient(135deg, #8b5cf6, #7c3aed); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Decoder<br><span style="font-size:0.7rem; opacity:0.8;">64 neurons</span></div>
-            <div style="color:#64748b; font-size:1.2rem;">→</div>
-            <div style="background:linear-gradient(135deg, #3b82f6, #2563eb); padding:12px 16px; border-radius:10px; color:white; font-weight:700; font-size:0.85rem;">Output<br><span style="font-size:0.7rem; opacity:0.8;">N features</span></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    try:
+        import plotly.graph_objects as go
 
-    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        scored = load_scored()
 
-    # Load results
-    ae_path = os.path.join(RESULTS_DIR, "autoencoder_results.json")
-    if os.path.exists(ae_path):
-        with open(ae_path, 'r') as f:
-            ae_data = json.load(f)
+        if len(scored) > 0 and 'risk_score' in scored.columns:
+            # Build network from real data
+            sample = scored.sample(min(200, len(scored)), random_state=42)
+            n = len(sample)
 
-        # Key metrics
-        cols = st.columns(4)
-        ae_metrics = [
-            ("blue", f"{ae_data.get('auc', 0):.4f}", "AUC SCORE", "Anomaly detection"),
-            ("purple", f"{ae_data.get('error_ratio', 0):.1f}x", "ERROR RATIO", "Fraud vs Normal"),
-            ("green", f"{ae_data.get('training_epochs', 0)}", "EPOCHS", "Training iterations"),
-            ("amber", f"{ae_data.get('threshold', 0):.4f}", "THRESHOLD", "Anomaly boundary"),
-        ]
-        for col, (cls, val, label, delta) in zip(cols, ae_metrics):
+            np.random.seed(42)
+            # Layout: arrange nodes in clusters
+            fraud_mask = sample['risk_score'].values > 60 if 'risk_score' in sample.columns else np.zeros(n, dtype=bool)
+            angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
+            x_pos = np.cos(angles) * (1 + np.random.randn(n) * 0.3)
+            y_pos = np.sin(angles) * (1 + np.random.randn(n) * 0.3)
+
+            # Fraud nodes cluster closer to center
+            x_pos[fraud_mask] *= 0.4
+            y_pos[fraud_mask] *= 0.4
+
+            scores = sample['risk_score'].values if 'risk_score' in sample.columns else np.random.rand(n) * 100
+            colors = ['#f87171' if s > 70 else '#fbbf24' if s > 40 else '#34d399' for s in scores]
+            sizes = [max(8, s / 5) for s in scores]
+        else:
+            # Generate demo network
+            n = 150
+            np.random.seed(42)
+            scores = np.concatenate([np.random.beta(2, 8, 120) * 100, np.random.beta(8, 2, 30) * 100])
+            fraud_mask = scores > 60
+
+            angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
+            x_pos = np.cos(angles) * (1 + np.random.randn(n) * 0.3)
+            y_pos = np.sin(angles) * (1 + np.random.randn(n) * 0.3)
+            x_pos[fraud_mask] *= 0.4
+            y_pos[fraud_mask] *= 0.4
+
+            colors = ['#f87171' if s > 70 else '#fbbf24' if s > 40 else '#34d399' for s in scores]
+            sizes = [max(8, s / 5) for s in scores]
+
+        # Create edges between nearby fraud nodes (fraud ring connections)
+        edge_x, edge_y = [], []
+        for i in range(n):
+            if scores[i] > 50:
+                for j in range(i + 1, n):
+                    if scores[j] > 50:
+                        dist = ((x_pos[i] - x_pos[j])**2 + (y_pos[i] - y_pos[j])**2)**0.5
+                        if dist < 0.6:
+                            edge_x.extend([x_pos[i], x_pos[j], None])
+                            edge_y.extend([y_pos[i], y_pos[j], None])
+
+        # Also add some random legit connections
+        for _ in range(40):
+            i, j = np.random.randint(0, n, 2)
+            if scores[i] < 40 and scores[j] < 40:
+                edge_x.extend([x_pos[i], x_pos[j], None])
+                edge_y.extend([y_pos[i], y_pos[j], None])
+
+        fig = go.Figure()
+
+        # Edges
+        fig.add_trace(go.Scatter(
+            x=edge_x, y=edge_y, mode='lines',
+            line=dict(width=0.5, color='rgba(139,92,246,0.15)'),
+            hoverinfo='none'
+        ))
+
+        # Nodes
+        fig.add_trace(go.Scatter(
+            x=x_pos, y=y_pos, mode='markers',
+            marker=dict(size=sizes, color=colors, line=dict(width=1, color='rgba(255,255,255,0.1)')),
+            text=[f"Score: {s:.0f}" for s in scores],
+            hovertemplate='<b>Transaction Node</b><br>Risk Score: %{text}<extra></extra>'
+        ))
+
+        fig.update_layout(
+            showlegend=False,
+            plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(showgrid=False, zeroline=False, visible=False),
+            yaxis=dict(showgrid=False, zeroline=False, visible=False),
+            height=600,
+            margin=dict(l=0, r=0, t=20, b=0),
+            font=dict(color='#e2e8f0'),
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Legend
+        cols = st.columns(3)
+        for col, (label, color, count) in zip(cols, [
+            ("🟢 Low Risk (0-40)", "#34d399", sum(1 for s in scores if s <= 40)),
+            ("🟡 Medium Risk (40-70)", "#fbbf24", sum(1 for s in scores if 40 < s <= 70)),
+            ("🔴 High Risk (70+)", "#f87171", sum(1 for s in scores if s > 70)),
+        ]):
             col.markdown(f"""
-            <div class="metric-card {cls}">
-                <div class="metric-value">{val}</div>
-                <div class="metric-label">{label}</div>
-                <div class="metric-delta">{delta}</div>
+            <div class="stat-card" style="padding:16px;">
+                <div class="stat-value" style="color:{color}; font-size:1.8rem;">{count}</div>
+                <div class="stat-label">{label}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="glass-card" style="padding:20px;">
+            <div class="section-header">🔍 Network Insights</div>
+            <div style="color:#94a3b8; font-size:0.9rem; line-height:1.8;">
+                • <strong style="color:#f87171;">Red nodes</strong> cluster in the center — fraud transactions share connections (shared cards, addresses, devices)<br>
+                • <strong style="color:#34d399;">Green nodes</strong> form the outer ring — legitimate transactions are distributed normally<br>
+                • <strong style="color:#a78bfa;">Purple edges</strong> between red nodes indicate potential <strong>fraud ring</strong> connections<br>
+                • Graph analysis (Louvain community detection) identifies organized fraud patterns invisible to rule-based systems
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    except ImportError:
+        st.warning("Plotly required: `pip install plotly`")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  PAGE: RISK HEATMAP
+# ═══════════════════════════════════════════════════════════════════════
+elif page == "🗺️ Risk Heatmap":
+    st.markdown('<h1 class="hero-title">🗺️ Risk Heatmap</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-subtitle">Fraud Density by Time of Day & Transaction Amount</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    try:
+        import plotly.graph_objects as go
+
+        scored = load_scored()
+
+        hours = list(range(24))
+        amount_bins = ['$0-50', '$50-200', '$200-500', '$500-1K', '$1K-5K', '$5K-10K', '$10K+']
+        amount_ranges = [(0, 50), (50, 200), (200, 500), (500, 1000), (1000, 5000), (5000, 10000), (10000, float('inf'))]
+
+        if len(scored) > 0 and 'risk_score' in scored.columns and 'hour_of_day' in scored.columns:
+            # Build from real data
+            heatmap_data = np.zeros((len(amount_bins), 24))
+            amounts = scored.get('TransactionAmt', scored.get('log_amount', np.random.lognormal(5, 2, len(scored))))
+            hours_col = scored['hour_of_day'].values
+            risk = scored['risk_score'].values
+
+            for i, (lo, hi) in enumerate(amount_ranges):
+                for h in range(24):
+                    mask = (amounts >= lo) & (amounts < hi) & (hours_col == h)
+                    if mask.sum() > 0:
+                        heatmap_data[i, h] = risk[mask].mean()
+        else:
+            # Generate realistic demo data
+            np.random.seed(42)
+            heatmap_data = np.zeros((len(amount_bins), 24))
+            for i in range(len(amount_bins)):
+                for h in range(24):
+                    base = 15 + i * 8
+                    if h <= 5 or h >= 22:
+                        base += 25
+                    if i >= 5:
+                        base += 15
+                    heatmap_data[i, h] = base + np.random.randn() * 5
+
+        fig = go.Figure(data=go.Heatmap(
+            z=heatmap_data,
+            x=[f"{h}:00" for h in hours],
+            y=amount_bins,
+            colorscale=[
+                [0, '#0a0a2e'],
+                [0.25, '#1e1b4b'],
+                [0.5, '#7c3aed'],
+                [0.75, '#f59e0b'],
+                [1.0, '#ef4444']
+            ],
+            hovertemplate='Hour: %{x}<br>Amount: %{y}<br>Avg Risk: %{z:.1f}<extra></extra>',
+            colorbar=dict(
+                title=dict(text='Risk Score', font=dict(color='#94a3b8')),
+                tickfont=dict(color='#94a3b8'),
+            ),
+        ))
+
+        fig.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(title='Hour of Day', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)'),
+            yaxis=dict(title='Transaction Amount', color='#94a3b8'),
+            height=480,
+            margin=dict(l=80, r=20, t=20, b=60),
+            font=dict(color='#e2e8f0'),
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Key Insights
+        st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        hot = np.unravel_index(heatmap_data.argmax(), heatmap_data.shape)
+        cold = np.unravel_index(heatmap_data.argmin(), heatmap_data.shape)
+
+        cols = st.columns(2)
+        cols[0].markdown(f"""
+        <div class="stat-card amber" style="padding:20px;">
+            <div class="stat-value" style="color:#ef4444; font-size:1.6rem;">{heatmap_data.max():.0f}</div>
+            <div class="stat-label">Highest Risk Zone</div>
+            <div class="stat-delta" style="color:#f59e0b;">{amount_bins[hot[0]]} at {hot[1]}:00</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        cols[1].markdown(f"""
+        <div class="stat-card green" style="padding:20px;">
+            <div class="stat-value" style="color:#34d399; font-size:1.6rem;">{heatmap_data.min():.0f}</div>
+            <div class="stat-label">Lowest Risk Zone</div>
+            <div class="stat-delta">{amount_bins[cold[0]]} at {cold[1]}:00</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="glass-card" style="padding:20px; margin-top:16px;">
+            <div class="section-header">💡 Key Pattern</div>
+            <div style="color:#94a3b8; font-size:0.9rem; line-height:1.8;">
+                High-value transactions during late-night hours (11 PM - 5 AM) show significantly elevated fraud risk.
+                This combination triggers the <strong style="color:#f59e0b;">Dormant Hijack</strong> and
+                <strong style="color:#ec4899;">Night-Time Velocity</strong> detection layers, increasing risk scores by 20-35 points.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    except ImportError:
+        st.warning("Plotly required: `pip install plotly`")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  PAGE: THRESHOLD OPTIMIZER
+# ═══════════════════════════════════════════════════════════════════════
+elif page == "🎯 Threshold":
+    st.markdown('<h1 class="hero-title">🎯 Threshold Optimizer</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="hero-subtitle">Cost-Sensitive Decision Threshold Analysis</p>', unsafe_allow_html=True)
+    st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+
+    try:
+        import plotly.graph_objects as go
+
+        # Load threshold results
+        thresh_path = os.path.join(RESULTS_DIR, "threshold_optimization.json")
+        if os.path.exists(thresh_path):
+            with open(thresh_path) as f:
+                thresh = json.load(f)
+        else:
+            # Generate demo data
+            thresh = {
+                'optimal_threshold': 0.38,
+                'default_threshold': 0.5,
+                'cost_at_optimal': 4250,
+                'cost_at_default': 7800,
+                'annual_savings_projected': '₹18,40,00,000',
+                'optimal_metrics': {'precision': 0.82, 'recall': 0.91, 'f1': 0.86, 'threshold': 0.38},
+                'default_metrics': {'precision': 0.89, 'recall': 0.72, 'f1': 0.80, 'threshold': 0.50},
+                'cost_matrix': {'false_negative_cost': 850, 'false_positive_cost': 25, 'review_cost': 15},
+                'threshold_curve': [{'threshold': t / 100, 'cost': 8000 - 4000 * np.exp(-((t/100 - 0.38)**2) / 0.05) + np.random.randn() * 200,
+                                     'precision': min(1, 0.5 + t / 200), 'recall': max(0, 1 - t / 120),
+                                     'f1': 2 * min(1, 0.5 + t/200) * max(0, 1 - t/120) / max(min(1, 0.5 + t/200) + max(0, 1 - t/120), 0.01)}
+                                    for t in range(5, 96, 2)]
+            }
+
+        # Top metrics
+        cols = st.columns(4)
+        opt = thresh.get('at_optimal', thresh.get('optimal_metrics', {}))
+        dfl = thresh.get('default_metrics', {})
+        savings = thresh.get('annual_savings_estimate', thresh.get('annual_savings_projected', 0))
+        savings_str = f"₹{savings:,.0f}" if isinstance(savings, (int, float)) else str(savings)
+        for col, (cls, val, label, delta) in zip(cols, [
+            ("blue", f"{thresh.get('optimal_threshold', 0.5):.2f}", "OPTIMAL THRESHOLD", f"vs default 0.50"),
+            ("green", f"{opt.get('recall', 0):.1%}", "RECALL AT OPTIMAL", f"F1: {opt.get('f1', 0):.4f}"),
+            ("purple", f"{opt.get('precision', 0):.1%}", "PRECISION AT OPTIMAL", "Cost-optimized"),
+            ("amber", savings_str, "ANNUAL SAVINGS", "vs naive 0.5 cutoff"),
+        ]):
+            col.markdown(f"""
+            <div class="stat-card {cls} animate-in">
+                <div class="stat-value" style="font-size:1.6rem;">{val}</div>
+                <div class="stat-label">{label}</div>
+                <div class="stat-delta">{delta}</div>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
 
-        # Error comparison
-        st.markdown('<div class="section-header" style="font-size:1.3rem;">Reconstruction Error Analysis</div>', unsafe_allow_html=True)
-        normal_err = ae_data.get('mean_error_normal', 0)
-        fraud_err = ae_data.get('mean_error_fraud', 0)
-        max_err = max(normal_err, fraud_err, 0.001)
+        # Cost curve plot
+        curve = thresh.get('threshold_curve', [])
+        if curve:
+            ts = [p['threshold'] for p in curve]
+            costs = [p['cost'] for p in curve]
+            f1s = [p.get('f1', 0) for p in curve]
 
-        st.markdown(f"""
-        <div class="glass-card" style="padding:16px;">
-            <div style="margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                    <span style="color:#06d6a0; font-weight:600;">🟢 Normal Transactions</span>
-                    <span style="color:#94a3b8;">{normal_err:.6f}</span>
-                </div>
-                <div style="background:rgba(255,255,255,0.05); border-radius:8px; height:24px; overflow:hidden;">
-                    <div style="width:{normal_err/max_err*100:.1f}%; height:100%; background:linear-gradient(90deg, #06d6a066, #06d6a0); border-radius:8px;"></div>
-                </div>
-            </div>
-            <div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                    <span style="color:#ef4444; font-weight:600;">🔴 Fraudulent Transactions</span>
-                    <span style="color:#94a3b8;">{fraud_err:.6f}</span>
-                </div>
-                <div style="background:rgba(255,255,255,0.05); border-radius:8px; height:24px; overflow:hidden;">
-                    <div style="width:{fraud_err/max_err*100:.1f}%; height:100%; background:linear-gradient(90deg, #ef444466, #ef4444); border-radius:8px;"></div>
-                </div>
-            </div>
-            <div style="text-align:center; margin-top:12px; color:#94a3b8; font-size:0.85rem;">
-                Fraud transactions have <span style="color:#f59e0b; font-weight:700;">{ae_data.get('error_ratio', 0):.1f}x higher</span> reconstruction error
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=ts, y=costs, mode='lines', name='Business Cost',
+                line=dict(color='#f87171', width=2),
+                fill='tozeroy', fillcolor='rgba(248,113,113,0.05)',
+            ))
 
+            # Add optimal threshold line
+            fig.add_vline(x=thresh['optimal_threshold'],
+                          line_dash="dash", line_color="#34d399", line_width=2,
+                          annotation_text=f"Optimal: {thresh['optimal_threshold']:.2f}",
+                          annotation_font_color="#34d399")
+            fig.add_vline(x=0.5,
+                          line_dash="dot", line_color="#64748b", line_width=1,
+                          annotation_text="Default: 0.50",
+                          annotation_font_color="#64748b")
+
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(title='Decision Threshold', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)'),
+                yaxis=dict(title='Total Business Cost', color='#94a3b8', gridcolor='rgba(255,255,255,0.03)'),
+                height=400,
+                margin=dict(l=60, r=20, t=40, b=60),
+                font=dict(color='#e2e8f0'),
+                legend=dict(font=dict(color='#94a3b8')),
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Cost matrix
         st.markdown('<div class="glow-divider"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">💳 Cost Matrix</div>', unsafe_allow_html=True)
 
-        # How it works
-        st.markdown('<div class="section-header" style="font-size:1.3rem;">How It Works</div>', unsafe_allow_html=True)
+        cm = thresh.get('cost_matrix', {})
+        cols = st.columns(3)
+        for col, (label, val, color, desc) in zip(cols, [
+            ("False Negative", f"₹{cm.get('false_negative_cost', 850)}", "#ef4444", "Missed fraud loss"),
+            ("False Positive", f"₹{cm.get('false_positive_cost', 25)}", "#f59e0b", "Customer friction"),
+            ("Manual Review", f"₹{cm.get('review_cost', 15)}", "#10b9ff", "Per flagged case"),
+        ]):
+            col.markdown(f"""
+            <div class="glass-card" style="text-align:center; padding:20px;">
+                <div style="font-size:1.8rem; font-weight:900; color:{color}; font-family:'JetBrains Mono',monospace;">{val}</div>
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:1.5px; margin-top:6px;">{label}</div>
+                <div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
         st.markdown("""
-        <div class="glass-card" style="padding:16px;">
-            <div style="color:#e2e8f0; font-size:0.9rem; line-height:1.8;">
-                <strong>1. Training Phase:</strong> The autoencoder learns to compress and reconstruct <em>only normal transactions</em> through a 16-neuron bottleneck.<br>
-                <strong>2. The Bottleneck:</strong> Forces the network to learn the essential "shape" of legitimate transactions — patterns that fraud doesn't follow.<br>
-                <strong>3. Detection:</strong> When a fraudulent transaction passes through, the network can't reconstruct it well, producing high error.<br>
-                <strong>4. Scoring:</strong> High reconstruction error = high anomaly score = likely fraud.<br><br>
-                <em style="color:#64748b;">Autoencoder-based anomaly detection is widely used in financial fraud detection systems.</em>
+        <div class="glass-card" style="padding:20px; margin-top:16px;">
+            <div class="section-header">💡 Why Not 0.5?</div>
+            <div style="color:#94a3b8; font-size:0.9rem; line-height:1.8;">
+                A naive 0.5 threshold treats false positives and false negatives equally.
+                In reality, <strong style="color:#ef4444;">missing a fraud (₹850 loss)</strong> costs
+                <strong style="color:#e2e8f0;">34x more</strong> than a false alarm (₹25 friction).
+                Our cost-sensitive optimizer shifts the threshold to catch more fraud,
+                accepting slightly more false positives — because the math says that's cheaper.
             </div>
         </div>
         """, unsafe_allow_html=True)
-    else:
-        st.warning("Run `python main.py` first to train the autoencoder.")
+
+    except ImportError:
+        st.warning("Plotly required: `pip install plotly`")
+

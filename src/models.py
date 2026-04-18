@@ -1,6 +1,7 @@
 """
 FraudShield AI — Model Training Module (v2)
 7 Models trained, 4-Model Stacking Ensemble: XGBoost, LightGBM, CatBoost, MLP
++ TabNet (Google's attention-based deep learning for tabular data)
 Meta-learner: Logistic Regression on out-of-fold predictions
 """
 
@@ -84,17 +85,18 @@ def _build_base_models():
         'xgboost': {
             'name': 'XGBoost',
             'model': xgb.XGBClassifier(
-                n_estimators=500, max_depth=7, learning_rate=0.05,
+                n_estimators=800, max_depth=7, learning_rate=0.05,
                 min_child_weight=30, subsample=0.85, colsample_bytree=0.85,
                 gamma=0.1, reg_alpha=0.1, reg_lambda=1.5,
-                eval_metric='auc', random_state=42, n_jobs=-1, verbosity=0
+                eval_metric='auc', random_state=42, n_jobs=-1, verbosity=0,
+                tree_method='hist', device='cuda'
             ),
             'needs_scaling': False,
         },
         'lightgbm': {
             'name': 'LightGBM',
             'model': lgb.LGBMClassifier(
-                n_estimators=500, max_depth=7, learning_rate=0.05,
+                n_estimators=800, max_depth=7, learning_rate=0.05,
                 num_leaves=63, min_child_samples=30, subsample=0.85,
                 colsample_bytree=0.85, reg_alpha=0.1, reg_lambda=1.5,
                 is_unbalance=True, random_state=42, n_jobs=-1, verbosity=-1
@@ -104,17 +106,17 @@ def _build_base_models():
         'catboost': {
             'name': 'CatBoost',
             'model': CatBoostClassifier(
-                iterations=400, depth=6, learning_rate=0.08,
+                iterations=600, depth=6, learning_rate=0.08,
                 l2_leaf_reg=3.0, border_count=128,
                 auto_class_weights='Balanced', eval_metric='AUC',
-                random_seed=42, verbose=0
+                random_seed=42, verbose=0, task_type='GPU'
             ),
             'needs_scaling': False,
         },
         'random_forest': {
             'name': 'Random Forest',
             'model': RandomForestClassifier(
-                n_estimators=150, max_depth=12, min_samples_leaf=20,
+                n_estimators=300, max_depth=14, min_samples_leaf=15,
                 class_weight='balanced', random_state=42, n_jobs=-1
             ),
             'needs_scaling': False,
@@ -122,8 +124,8 @@ def _build_base_models():
         'mlp': {
             'name': 'MLP Neural Net',
             'model': MLPClassifier(
-                hidden_layer_sizes=(128, 64, 32), activation='relu',
-                solver='adam', max_iter=50, batch_size=2048,
+                hidden_layer_sizes=(256, 128, 64), activation='relu',
+                solver='adam', max_iter=100, batch_size=2048,
                 early_stopping=True, validation_fraction=0.1,
                 random_state=42, verbose=False
             ),
@@ -136,7 +138,7 @@ def _build_base_models():
 def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     """Train all models with stacking ensemble."""
     print("\n" + "=" * 70)
-    print("MODEL TRAINING (7 Models, 4-Model Stacking)")
+    print("MODEL TRAINING (8 Models, 5-Model Stacking, 7-Fold CV)")
     print("=" * 70)
 
     results = {}
@@ -157,6 +159,12 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
             for k, v in tuned_params['lightgbm'].items():
                 if hasattr(lgb_model, k):
                     setattr(lgb_model, k, v)
+        if 'catboost' in tuned_params and 'catboost' in models_config:
+            print("  [OPTUNA] Applying tuned CatBoost params...")
+            cat_model = models_config['catboost']['model']
+            for k, v in tuned_params['catboost'].items():
+                if hasattr(cat_model, k):
+                    setattr(cat_model, k, v)
 
     # Scaler for MLP
     scaler = StandardScaler()
@@ -169,7 +177,7 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     # ──────────────────────────────────────────────────────────────
     print("\n  [Phase 1] Training individual models + OOF predictions...")
 
-    n_folds = 5
+    n_folds = 7
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
 
     # Store OOF predictions for stacking
@@ -236,25 +244,155 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     results['isolation_forest'] = evaluate_model("Isolation Forest", y_test, iso_pred, iso_scores)
 
     # ──────────────────────────────────────────────────────────────
-    # PHASE 3: STACKING META-LEARNER
+    # PHASE 2.5: TabNet (Google's attention-based deep learning)
     # ──────────────────────────────────────────────────────────────
-    print(f"\n  [Stacking] Training Logistic Regression meta-learner on OOF predictions...")
+    tabnet_ok = False
+    try:
+        from pytorch_tabnet.tab_model import TabNetClassifier as TabNet
+        print(f"\n  [TabNet] Training Google's attention-based deep learning model...")
 
-    # Build stacking feature matrix — ONLY top 4 models (exclude weak RF + IsoForest)
-    stack_keys = [k for k in models_config.keys() if k != 'random_forest']  # xgboost, lightgbm, catboost, mlp
-    meta_X_train = np.column_stack([oof_preds[k] for k in stack_keys])
-    meta_X_test = np.column_stack([test_preds[k] for k in stack_keys])
+        # Chunked predict to avoid RAM issues on large arrays
+        def _tabnet_predict_chunked(model, X, chunk_size=10000):
+            preds = np.zeros(len(X))
+            for start in range(0, len(X), chunk_size):
+                end = min(start + chunk_size, len(X))
+                preds[start:end] = model.predict_proba(X[start:end])[:, 1]
+            return preds
 
-    meta_feature_names = [f"oof_{k}" for k in stack_keys]
-    print(f"    -> Stacking features (top 4 only): {meta_feature_names}")
+        tabnet_oof = np.zeros(len(X_train))
+        tabnet_test_sum = np.zeros(len(X_test))
 
-    meta_model = LogisticRegression(
-        C=1.0, max_iter=1000, random_state=42, solver='lbfgs'
+        # Full power TabNet config (GPU-ready)
+        import torch
+        _device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print(f"    -> TabNet device: {_device}")
+        tabnet_cfg = dict(
+            n_d=64, n_a=64, n_steps=7,
+            gamma=1.5, lambda_sparse=1e-4,
+            optimizer_params=dict(lr=2e-2, weight_decay=1e-5),
+            scheduler_params=dict(step_size=15, gamma=0.9),
+            scheduler_fn=torch.optim.lr_scheduler.StepLR,
+            mask_type='entmax', verbose=0, seed=42,
+            device_name=_device
+        )
+
+        import gc
+
+        for fold, (train_idx, val_idx) in enumerate(skf.split(X_train_scaled, y_train)):
+            X_fold_tr = X_train_scaled[train_idx]
+            X_fold_val = X_train_scaled[val_idx]
+            y_fold_tr = y_train.iloc[train_idx].values
+            y_fold_val = y_train.iloc[val_idx].values
+
+            tabnet_model = TabNet(**tabnet_cfg)
+            tabnet_model.fit(
+                X_fold_tr, y_fold_tr,
+                eval_set=[(X_fold_val, y_fold_val)],
+                eval_metric=['auc'],
+                max_epochs=100, patience=15, batch_size=4096,
+                drop_last=False
+            )
+            tabnet_oof[val_idx] = _tabnet_predict_chunked(tabnet_model, X_fold_val)
+            tabnet_test_sum += _tabnet_predict_chunked(tabnet_model, X_test_scaled)
+            print(f"    -> Fold {fold+1}/{n_folds} done")
+            del tabnet_model; gc.collect()  # Free RAM after each fold
+
+        tabnet_test_prob = tabnet_test_sum / n_folds
+        oof_preds['tabnet'] = tabnet_oof
+        test_preds['tabnet'] = tabnet_test_prob
+
+        # Train final TabNet on all data
+        final_tabnet = TabNet(**tabnet_cfg)
+        final_tabnet.fit(
+            X_train_scaled, y_train.values,
+            max_epochs=100, patience=15, batch_size=4096,
+            drop_last=False
+        )
+        trained_models['tabnet'] = final_tabnet
+
+        tabnet_pred = (tabnet_test_prob > 0.5).astype(int)
+        results['tabnet'] = evaluate_model("TabNet", y_test, tabnet_pred, tabnet_test_prob)
+        tabnet_ok = True
+        print(f"    -> TabNet AUC: {results['tabnet']['auc']:.4f}")
+
+    except ImportError:
+        print("  [TabNet] pytorch-tabnet not installed, skipping")
+    except Exception as e:
+        print(f"  [TabNet] Error: {e}, skipping")
+
+    # ──────────────────────────────────────────────────────────────
+    # PHASE 3: NONLINEAR STACKING META-LEARNER (XGBoost Level-2)
+    # ──────────────────────────────────────────────────────────────
+    print(f"\n  [Stacking] Training XGBoost meta-learner on OOF predictions...")
+
+    # Build stacking feature matrix — top models + anomaly scores
+    stack_keys = [k for k in models_config.keys() if k != 'random_forest']
+    if tabnet_ok:
+        stack_keys.append('tabnet')
+
+    # Level-2 features: model OOF predictions + anomaly scores
+    meta_features_train = [oof_preds[k] for k in stack_keys]
+    meta_features_test = [test_preds[k] for k in stack_keys]
+
+    # Add Isolation Forest anomaly scores as deep anomaly features
+    meta_features_train.append(iso_scores_train)
+    meta_features_test.append(iso_scores)
+
+    meta_X_train = np.column_stack(meta_features_train)
+    meta_X_test = np.column_stack(meta_features_test)
+
+    meta_feature_names = [f"oof_{k}" for k in stack_keys] + ['iso_anomaly_score']
+    print(f"    -> Stacking features: {meta_feature_names}")
+
+    # Nonlinear meta-learner: XGBoost captures model interactions
+    meta_model = xgb.XGBClassifier(
+        n_estimators=200, max_depth=3, learning_rate=0.05,
+        subsample=0.8, colsample_bytree=0.8,
+        eval_metric='auc', random_state=42, verbosity=0
     )
     meta_model.fit(meta_X_train, y_train)
     trained_models['meta_learner'] = meta_model
 
     ensemble_proba = meta_model.predict_proba(meta_X_test)[:, 1]
+
+    # ──────────────────────────────────────────────────────────────
+    # PHASE 3b: RANK-WEIGHTED BLEND (second ensemble method)
+    # ──────────────────────────────────────────────────────────────
+    print(f"\n  [Blending] Computing rank-weighted ensemble...")
+    from scipy.stats import rankdata
+
+    # Convert predictions to ranks (handles calibration differences)
+    rank_preds = {}
+    for k in stack_keys:
+        rank_preds[k] = rankdata(test_preds[k]) / len(test_preds[k])
+
+    # Weight by individual AUC performance
+    auc_weights = {}
+    total_w = 0
+    for k in stack_keys:
+        if k in results:
+            w = results[k]['auc'] ** 3  # Cube AUC to amplify differences
+            auc_weights[k] = w
+            total_w += w
+        else:
+            auc_weights[k] = 1.0
+            total_w += 1.0
+
+    blend_proba = np.zeros(len(y_test))
+    for k in stack_keys:
+        blend_proba += rank_preds[k] * (auc_weights[k] / total_w)
+
+    blend_auc = roc_auc_score(y_test, blend_proba)
+    stack_auc = roc_auc_score(y_test, ensemble_proba)
+    print(f"    -> XGBoost Stacking AUC: {stack_auc:.4f}")
+    print(f"    -> Rank-Weighted Blend AUC: {blend_auc:.4f}")
+
+    # Pick the better ensemble method
+    if blend_auc > stack_auc:
+        print(f"    -> BLEND wins! Using rank-weighted ensemble")
+        ensemble_proba = blend_proba
+    else:
+        print(f"    -> STACKING wins! Using XGBoost meta-learner")
 
     # Optimal threshold
     best_f1, best_thresh = 0, 0.5
@@ -269,7 +407,8 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     print(f"    -> Optimal threshold: {best_thresh:.2f} (F1={best_f1:.4f} vs default-0.5 F1={default_f1:.4f})")
 
     ensemble_pred = (ensemble_proba > best_thresh).astype(int)
-    results['ensemble'] = evaluate_model("Stacking Ensemble (6-Model)", y_test, ensemble_pred, ensemble_proba)
+    stack_label = f"Dual Ensemble ({len(stack_keys)}-Model)"
+    results['ensemble'] = evaluate_model(stack_label, y_test, ensemble_pred, ensemble_proba)
 
     # Verify ensemble beats individual models
     best_individual = max((v['auc'], k) for k, v in results.items() if k != 'ensemble')
@@ -279,7 +418,7 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
     else:
         print(f"\n  [WARN] Ensemble AUC ({ens_auc:.4f}) vs best individual ({best_individual[1]}: {best_individual[0]:.4f})")
 
-    return trained_models, results, {
+    probas = {
         'xgb_proba': test_preds['xgboost'],
         'lgb_proba': test_preds['lightgbm'],
         'cat_proba': test_preds['catboost'],
@@ -290,6 +429,9 @@ def train_models(X_train, y_train, X_test, y_test, tuned_params=None):
         'ensemble_pred': ensemble_pred,
         'optimal_threshold': best_thresh,
     }
+    if tabnet_ok:
+        probas['tabnet_proba'] = test_preds['tabnet']
+    return trained_models, results, probas
 
 
 def evaluate_model(name, y_true, y_pred, y_proba):

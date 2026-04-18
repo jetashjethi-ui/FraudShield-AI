@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#030712">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="FraudShield AI — Real-time fraud detection with 25 detection layers and 8 ML models">
+    <title>FraudShield AI</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Alert Banner -->
+<div id="alertBanner" class="alert-banner red">
+    <span class="alert-banner-icon">🚨</span>
+    <span id="alertText">Fraud detected!</span>
+    <button class="alert-banner-close" onclick="dismissAlert()">✕</button>
+</div>
+
+<div class="app">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-icon">🛡️</div>
+        <div class="header-title">FraudShield AI</div>
+        <div class="header-sub">Adaptive Fraud Detection</div>
+    </div>
+
+    <!-- ════ HOME ════ -->
+    <div id="home" class="page active">
+        <div style="text-align:center">
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                <span class="status-label">System Online · 8 Models Active</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat s1">
+                <div class="stat-val">0.978</div>
+                <div class="stat-lbl">AUC-ROC</div>
+            </div>
+            <div class="stat s2">
+                <div class="stat-val">8</div>
+                <div class="stat-lbl">ML Models</div>
+            </div>
+            <div class="stat s3">
+                <div class="stat-val">25</div>
+                <div class="stat-lbl">Detection Layers</div>
+            </div>
+            <div class="stat s4">
+                <div class="stat-val">95%</div>
+                <div class="stat-lbl">Conformal Coverage</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">System Configuration</div>
+            <div class="card">
+                <div class="info-row">
+                    <span class="info-key">Ensemble</span>
+                    <span class="info-val" style="color:var(--purple)">Dual Stacking</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Cross-Validation</span>
+                    <span class="info-val" style="color:var(--blue)">7-Fold</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Optuna Trials</span>
+                    <span class="info-val" style="color:var(--green)">150</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">Uncertainty</span>
+                    <span class="info-val" style="color:var(--pink)">Conformal Prediction</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">GPU Accelerated</span>
+                    <span class="info-val" style="color:var(--amber)">XGB + CatBoost + TabNet</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Models</div>
+            <div class="chips">
+                <span class="chip" style="color:var(--blue); border-color:rgba(56,189,248,0.2); background:rgba(56,189,248,0.06)">XGBoost GPU</span>
+                <span class="chip" style="color:#2dd4bf; border-color:rgba(45,212,191,0.2); background:rgba(45,212,191,0.06)">LightGBM</span>
+                <span class="chip" style="color:var(--pink); border-color:rgba(244,114,182,0.2); background:rgba(244,114,182,0.06)">CatBoost GPU</span>
+                <span class="chip" style="color:var(--green); border-color:rgba(52,211,153,0.2); background:rgba(52,211,153,0.06)">Random Forest</span>
+                <span class="chip" style="color:var(--purple); border-color:rgba(167,139,250,0.2); background:rgba(167,139,250,0.06)">MLP Neural</span>
+                <span class="chip" style="color:var(--amber); border-color:rgba(251,191,36,0.2); background:rgba(251,191,36,0.06)">IsoForest</span>
+                <span class="chip" style="color:#60a5fa; border-color:rgba(96,165,250,0.2); background:rgba(96,165,250,0.06)">TabNet GPU</span>
+                <span class="chip" style="color:var(--red); border-color:rgba(248,113,113,0.2); background:rgba(248,113,113,0.06)">Autoencoder</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ SCAN ════ -->
+    <div id="scan" class="page">
+        <div class="section">
+            <div class="section-title">Scan Transaction</div>
+            <div class="card">
+                <div class="form-group">
+                    <label class="form-label">Transaction Amount (₹)</label>
+                    <input type="number" id="amount" class="form-input" value="5000" placeholder="e.g. 5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product Code</label>
+                    <select id="product" class="form-select">
+                        <option value="W">W — Wire Transfer</option>
+                        <option value="H">H — Digital Goods</option>
+                        <option value="C" selected>C — Card Present</option>
+                        <option value="S">S — Subscription</option>
+                        <option value="R">R — Refund</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="form-group">
+                        <label class="form-label">Hour (0-23)</label>
+                        <input type="number" id="hour" class="form-input" value="14" min="0" max="23">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Weekend?</label>
+                        <select id="weekend" class="form-select">
+                            <option value="0" selected>No — Weekday</option>
+                            <option value="1">Yes — Weekend</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Card Type</label>
+                    <select id="cardType" class="form-select">
+                        <option value="visa" selected>Visa</option>
+                        <option value="mastercard">Mastercard</option>
+                        <option value="discover">Discover</option>
+                        <option value="american express">American Express</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Card Category</label>
+                    <select id="cardCategory" class="form-select">
+                        <option value="debit" selected>Debit</option>
+                        <option value="credit">Credit</option>
+                        <option value="charge card">Charge Card</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Domain</label>
+                    <select id="emailDomain" class="form-select">
+                        <option value="gmail.com" selected>gmail.com</option>
+                        <option value="yahoo.com">yahoo.com</option>
+                        <option value="hotmail.com">hotmail.com</option>
+                        <option value="outlook.com">outlook.com</option>
+                        <option value="protonmail.com">protonmail.com ⚠️</option>
+                        <option value="anonymous.com">anonymous.com ⚠️</option>
+                    </select>
+                </div>
+                <button id="scanBtn" class="btn-primary" onclick="scanTransaction()">
+                    Scan Transaction
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="section">
+            <div class="section-title">Quick Test Presets</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <button class="btn-preset safe" onclick="loadPreset('safe')">✅ Safe Transaction</button>
+                <button class="btn-preset danger" onclick="loadPreset('fraud')">🚨 Suspicious Fraud</button>
+                <button class="btn-preset warn" onclick="loadPreset('night')">🌙 Late Night</button>
+                <button class="btn-preset info" onclick="loadPreset('high')">💰 High Value</button>
+            </div>
+        </div>
+
+        <div id="resultCard" class="result"></div>
+    </div>
+
+    <!-- ════ FEED ════ -->
+    <div id="feed" class="page">
+        <div class="section">
+            <div class="section-title">Transaction Feed</div>
+            <!-- Feed stats -->
+            <div class="stats-grid" style="margin-bottom:12px;">
+                <div class="stat s3" style="padding:12px;">
+                    <div class="stat-val" id="feedApproved" style="font-size:1.2rem;">5</div>
+                    <div class="stat-lbl">Approved</div>
+                </div>
+                <div class="stat s4" style="padding:12px; --amber:#f87171;">
+                    <div class="stat-val" id="feedBlocked" style="font-size:1.2rem; color:var(--red);">1</div>
+                    <div class="stat-lbl">Blocked</div>
+                </div>
+            </div>
+            <div id="feedList"></div>
+        </div>
+    </div>
+
+    <!-- ════ INFO ════ -->
+    <div id="info" class="page">
+        <div class="section">
+            <div class="section-title">Technical Specs</div>
+            <div class="card">
+                <p style="color:var(--text-secondary); font-size:0.85rem; line-height:1.8;">
+                    <strong style="color:var(--blue)">25</strong> detection layers including graph analysis, peer-group deviation, transaction entropy, and lag features.
+                </p>
+                <div class="divider"></div>
+                <p style="color:var(--text-secondary); font-size:0.85rem; line-height:1.8;">
+                    <strong style="color:var(--purple)">Dual stacking</strong> ensemble: XGBoost meta-learner + rank-weighted blend with automatic selection.
+                </p>
+                <div class="divider"></div>
+                <p style="color:var(--text-secondary); font-size:0.85rem; line-height:1.8;">
+                    <strong style="color:var(--green)">Conformal prediction</strong> with 95% coverage guarantee and isotonic probability calibration.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Risk Tiers</div>
+            <div class="card">
+                <div class="info-row">
+                    <span class="info-key">🟢 0-30</span>
+                    <span class="info-val" style="color:var(--green)">Auto Approve</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">🟡 31-50</span>
+                    <span class="info-val" style="color:var(--amber)">PIN Verify</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">🟠 51-70</span>
+                    <span class="info-val" style="color:#fb923c">Biometric Required</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-key">🔴 71-100</span>
+                    <span class="info-val" style="color:var(--red)">Block & Investigate</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Regulatory Compliance</div>
+            <div class="card">
+                <div class="compliance-row">
+                    <span class="compliance-name">PCI-DSS</span>
+                    <span class="compliance-status">✓ Compliant</span>
+                </div>
+                <div class="compliance-row">
+                    <span class="compliance-name">RBI Framework</span>
+                    <span class="compliance-status">✓ Aligned</span>
+                </div>
+                <div class="compliance-row">
+                    <span class="compliance-name">GDPR Art. 22</span>
+                    <span class="compliance-status">✓ LIME Enabled</span>
+                </div>
+                <div class="compliance-row">
+                    <span class="compliance-name">EU AI Act</span>
+                    <span class="compliance-status">✓ Conformal</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center; padding:24px 0; color:var(--muted); font-size:0.6rem; letter-spacing:2px;">
+            FRAUDSHIELD AI · FROSTHACK 2026
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+    <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+        <span>🏠</span>Home
+    </button>
+    <button class="nav-btn" data-page="scan" onclick="showPage('scan')">
+        <span>🔍</span>Scan
+    </button>
+    <button class="nav-btn" data-page="feed" onclick="showPage('feed')">
+        <span>📡</span>Feed
+    </button>
+    <button class="nav-btn" data-page="info" onclick="showPage('info')">
+        <span>ℹ️</span>About
+    </button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

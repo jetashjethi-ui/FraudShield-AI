@@ -80,7 +80,7 @@ def generate_pdf_report(output_dir):
     pdf.section_title('System Architecture')
     pdf.body_text(
         'FraudShield AI is a multi-layered fraud detection system featuring '
-        '17 detection layers, a 4-model stacking ensemble with Logistic Regression '
+        '18 detection layers, a 4-model stacking ensemble with Logistic Regression '
         'meta-learner, temporal graph analysis using NetworkX and Louvain community '
         'detection, SHAP-based explainability, Optuna hyperparameter tuning, '
         'target encoding, and adversarial robustness testing.'

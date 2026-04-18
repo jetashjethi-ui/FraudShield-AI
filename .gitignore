@@ -32,6 +32,10 @@ outputs/models/
 outputs/model_artifacts/
 outputs/pipeline_log.txt
 outputs/results/scored_transactions.csv
+outputs/results/oof_predictions.csv
+*.pkl
+*.joblib
+*.h5
 
 # CatBoost training logs
 catboost_info/
@@ -50,5 +54,3 @@ more idea
 # Misc
 *.zip
 synthetic_mobile/
-DEMO_SCRIPT.md
-DOCUMENTATION.md

@@ -27,8 +27,10 @@ if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
@@ -36,8 +38,8 @@ from typing import Optional, List
 app = FastAPI(
     title="FraudShield AI — Real-Time Scoring API",
     description="Adaptive fraud detection with explainable risk intelligence. "
-                "17 detection layers, 7 models with 4-model stacking ensemble, graph analysis, SHAP XAI.",
-    version="2.0.0",
+                "25 detection layers, 8 models with dual stacking ensemble, conformal prediction.",
+    version="3.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -49,6 +51,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve static apps
+BASE = os.path.dirname(os.path.abspath(__file__))
+MOBILE_DIR = os.path.join(BASE, "mobile")
+LANDING_DIR = os.path.join(BASE, "landing")
+if os.path.isdir(MOBILE_DIR):
+    app.mount("/mobile", StaticFiles(directory=MOBILE_DIR, html=True), name="mobile")
 
 # ─── Model Loading ───────────────────────────────────────────────────
 ARTIFACTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs", "model_artifacts")
@@ -154,6 +163,7 @@ class HealthResponse(BaseModel):
     models_loaded: int
     features_count: int
     uptime: str
+    model_auc: float = 0.0
 
 
 # ─── Scoring Logic ───────────────────────────────────────────────────
@@ -266,21 +276,29 @@ async def startup():
     load_models()
 
 
-@app.get("/", tags=["Info"])
+@app.get("/", response_class=HTMLResponse, tags=["Info"])
 async def root():
-    return {
-        "name": "FraudShield AI",
-        "version": "2.0.0",
-        "description": "Real-time fraud detection with explainable risk intelligence",
-        "architecture": "17 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis | SHAP XAI",
-        "endpoints": {
-            "/docs": "Interactive API documentation (Swagger UI)",
-            "/score": "POST - Score a single transaction",
-            "/batch": "POST - Score multiple transactions",
-            "/health": "GET - System health check",
-            "/model-info": "GET - Model metadata",
+    """Serve the product landing page."""
+    landing_path = os.path.join(LANDING_DIR, "index.html")
+    if os.path.exists(landing_path):
+        with open(landing_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>FraudShield AI</h1><p><a href='/docs'>API Docs</a> | <a href='/mobile/'>Mobile App</a></p>")
+
+
+@app.post("/predict", tags=["Scoring"])
+async def predict(txn: TransactionRequest):
+    """Mobile-friendly scoring endpoint (simplified response)."""
+    try:
+        result = score_transaction(txn)
+        return {
+            "risk_score": result.risk_score,
+            "risk_category": result.risk_category,
+            "fraud_probability": result.fraud_probability,
+            "reasons": [{"icon": "📊", "text": r} for r in result.top_risk_factors],
         }
-    }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/score", response_model=RiskResponse, tags=["Scoring"])
@@ -313,11 +331,21 @@ async def batch_score(request: BatchRequest):
 async def health():
     """System health check."""
     uptime = datetime.now() - startup_time
+    auc = 0.0
+    try:
+        mp = os.path.join(RESULTS_DIR, 'model_metrics.json')
+        if os.path.exists(mp):
+            with open(mp) as f:
+                mx = json.load(f)
+            auc = max(m.get('auc', 0) for m in mx.values()) if mx else 0
+    except Exception:
+        pass
     return HealthResponse(
         status="healthy" if models else "degraded",
         models_loaded=len(models),
         features_count=len(feature_names),
         uptime=str(uptime).split('.')[0],
+        model_auc=round(auc, 4),
     )
 
 
@@ -334,9 +362,9 @@ async def model_info():
         "models_loaded": list(models.keys()),
         "feature_count": len(feature_names),
         "architecture": {
-            "detection_layers": 17,
-            "base_models": ["XGBoost", "LightGBM", "CatBoost", "Random Forest", "MLP", "Isolation Forest"],
-            "meta_learner": "Logistic Regression (Stacking)",
+            "detection_layers": 25,
+            "base_models": ["XGBoost", "LightGBM", "CatBoost", "Random Forest", "MLP", "Isolation Forest", "TabNet", "Autoencoder"],
+            "meta_learner": "XGBoost Meta-Learner + Rank-Weighted Blend (Dual Stacking)",
             "graph_engine": "NetworkX + Louvain Community Detection",
             "explainability": "SHAP TreeExplainer",
         },
@@ -430,3 +458,58 @@ async def roi_calculator():
             "baseline_detection_rate": f"{baseline_catch_rate*100:.0f}%",
         }
     }
+
+
+# ─── WebSocket Live Feed ──────────────────────────────────────────────
+import asyncio
+import random as _rnd
+
+active_connections: list = []
+
+@app.websocket("/ws/feed")
+async def websocket_feed(websocket: WebSocket):
+    """Stream simulated live transaction scoring every ~2s."""
+    await websocket.accept()
+    active_connections.append(websocket)
+    try:
+        while True:
+            amt = round(_rnd.lognormvariate(5.5, 1.8), 2)
+            hr = _rnd.randint(0, 23)
+            products = ['W', 'C', 'H', 'S', 'R']
+            emails = ['gmail.com', 'yahoo.com', 'hotmail.com', 'protonmail.com', 'outlook.com']
+            prod = _rnd.choice(products)
+            email = _rnd.choice(emails)
+            wknd = 1 if _rnd.random() < 0.28 else 0
+
+            score = 10
+            if amt > 5000: score += 25
+            elif amt > 1000: score += 12
+            if hr <= 5 or hr >= 23: score += 18
+            if wknd and hr <= 5: score += 10
+            if prod == 'W' and amt > 3000: score += 15
+            if email == 'protonmail.com': score += 12
+            score += _rnd.randint(-8, 8)
+            score = max(0, min(100, score))
+
+            cat = 'RED_BLOCK' if score > 75 else 'ORANGE_BIOMETRIC' if score > 55 else 'YELLOW_PIN' if score > 35 else 'GREEN_APPROVE'
+            tier = cat.split('_')[0]
+
+            txn = {
+                'id': f'TXN-{_rnd.randint(100000, 999999)}',
+                'amount': amt,
+                'product': prod,
+                'hour': hr,
+                'email': email,
+                'risk_score': score,
+                'risk_category': cat,
+                'tier': tier,
+                'timestamp': datetime.now().isoformat(),
+            }
+
+            await websocket.send_json(txn)
+            await asyncio.sleep(_rnd.uniform(1.5, 3.5))
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+    except Exception:
+        if websocket in active_connections:
+            active_connections.remove(websocket)

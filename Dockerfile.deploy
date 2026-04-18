@@ -1,0 +1,28 @@
+# FraudShield AI — Lightweight deployment (API + Landing + Mobile)
+# No GPU, no training — just the FastAPI serving layer
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ curl && rm -rf /var/lib/apt/lists/*
+
+# Minimal requirements for API deployment
+COPY requirements.deploy.txt .
+RUN pip install --no-cache-dir -r requirements.deploy.txt
+
+# Copy only what's needed for the API
+COPY api.py .
+COPY landing/ landing/
+COPY mobile/ mobile/
+COPY outputs/ outputs/ 2>/dev/null || true
+COPY src/ src/ 2>/dev/null || true
+
+# Render uses PORT env variable
+ENV PORT=8000
+
+EXPOSE ${PORT}
+
+HEALTHCHECK CMD curl --fail http://localhost:${PORT}/health || exit 1
+
+CMD uvicorn api:app --host 0.0.0.0 --port ${PORT}

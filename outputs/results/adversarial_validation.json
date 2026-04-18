@@ -1,0 +1,10 @@
+{
+  "adversarial_auc": 0.5004,
+  "fold_aucs": [
+    0.5018,
+    0.4983,
+    0.501
+  ],
+  "status": "EXCELLENT",
+  "passed": true
+}

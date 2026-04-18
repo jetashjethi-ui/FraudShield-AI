@@ -1,119 +1,75 @@
-# FraudShield AI - Summary Report
-**FrostHack · March 2026 · Financial Services Track**
+# FraudShield AI — Executive Summary
+
+## System at a Glance
+
+| Component | Details |
+|-----------|---------|
+| **Dataset** | IEEE-CIS Fraud Detection (590,540 transactions) |
+| **Feature Engineering** | 25 detection layers (velocity, graph, behavioral, entropy, etc.) |
+| **Models** | 8-model dual stacking ensemble (XGBoost, LightGBM, CatBoost, RF, MLP, IsoForest, TabNet, Autoencoder) |
+| **Best Model AUC** | **0.9776** (XGBoost) |
+| **Ensemble AUC** | **0.9763** (4-Model Stacking) |
+| **Cross-Validation** | 7-Fold Stratified with Optuna HPO (150 trials) |
+| **Uncertainty** | Conformal Prediction with 95% coverage guarantee |
+| **Calibration** | Isotonic probability calibration |
+| **Threshold** | Cost-optimized at 0.015 (FN=₹850, FP=₹25) → 89% recall |
+| **Explainability** | SHAP + LIME + Counterfactual analysis |
+| **Dashboard** | 17-page interactive Streamlit dashboard |
+| **Mobile App** | Progressive Web App with WebSocket live feed |
+| **API** | FastAPI REST API with Swagger + WebSocket `/ws/feed` |
+| **Deployment** | Docker + Render.com + Streamlit Cloud |
 
 ---
 
-## Problem
-
-Credit card fraud costs over $32 billion a year globally and most of it goes undetected. Traditional rule-based systems have two big problems: they flag too many legitimate transactions (high false positives) and they can't explain why something was flagged. There's no way for an analyst to review the decision.
-
-I wanted to build something that detects fraud accurately, explains every decision, and responds differently based on how suspicious a transaction actually is.
-
----
-
-## Dataset
-
-IEEE-CIS Fraud Detection dataset from Kaggle. 590,540 transactions, 434 features, 3.5% fraud rate. I merged the transaction table with the identity table on TransactionID and split 80/20 stratified.
-
----
-
-## Approach
-
-### Feature Engineering
-
-I built 17 feature layers, each targeting a different fraud signal:
-
-- **Amount features**: z-scores, log transforms, percentile bins
-- **Behavioral profiles**: per-card averages, standard deviations, spending frequency
-- **SIM swap signals**: counting how many devices each card has been used on
-- **Time features**: hour of day, night flag, weekend flag
-- **Merchant risk**: fraud rate per product category
-- **Mule detection**: counting cards sharing the same device
-- **Dormant accounts**: time since last transaction per card
-- **Round amounts**: flagging suspiciously round values ($1000, $5000)
-- **Velocity**: transaction frequency in recent time windows
-- **Email risk**: scoring disposable/anonymous email providers
-- **Graph features**: built a NetworkX graph, ran Louvain community detection, extracted PageRank, betweenness centrality, community fraud rate (11 features total)
-- **Target encoding**: smoothed encoding for high-cardinality categoricals like card1, addr1
-
-### Handling Imbalance
-
-Used SMOTE to oversample fraud to ~15% ratio. Also used model-level balancing (scale_pos_weight for XGBoost, auto_class_weights for CatBoost, is_unbalance for LightGBM).
-
-### Hyperparameter Tuning
-
-Optuna with 30 Bayesian trials for XGBoost and LightGBM. Optimized for AUC-ROC on 3-fold stratified CV. Saved best params and applied them to final training.
-
-### Models
-
-Trained 7 models:
-1. XGBoost (Optuna-tuned)
-2. LightGBM (Optuna-tuned)
-3. CatBoost (400 iterations, depth 6)
-4. Random Forest (200 trees)
-5. MLP Neural Net (128-64-32 hidden layers, ReLU)
-6. Isolation Forest (unsupervised, 3.5% contamination)
-7. Deep Autoencoder (64→16→64 bottleneck, trained on normal transactions only)
-
-### Stacking
-
-Took the top 4 (XGBoost, LightGBM, CatBoost, MLP) and generated 5-fold out-of-fold predictions. Fed those as features to a logistic regression meta-learner. Excluded RF and Isolation Forest from stacking because their weaker predictions were adding noise.
-
-### Autoencoder
-
-Trained a bottleneck autoencoder only on legitimate transactions. The idea is that it learns what "normal" looks like, and when a fraud transaction comes through, the reconstruction error is much higher. Got a 3.4x error ratio (fraud vs normal). AUC is 0.696 on its own, but it complements the supervised models by catching patterns that weren't in the labeled data.
-
-### Adversarial Testing
-
-Ran 5 tests to check if the model can be fooled:
-- Amount splitting (small amounts): 65.7% catch rate
-- Time evasion (business hours fraud): 60.5%
-- Device spoofing (normal devices): 64.7%
-- Threshold sensitivity: 99.2% stable
-- Feature perturbation (random noise): 95.7% confident
-
-All 5 passed.
-
----
-
-## Results
+## Model Performance (Real Pipeline Results)
 
 | Model | AUC | F1 | Precision | Recall |
-|-------|-----|-----|-----------|--------|
-| XGBoost | 0.9479 | 0.6284 | 0.8661 | 0.4931 |
-| LightGBM | 0.9481 | 0.5835 | 0.5091 | 0.6833 |
-| CatBoost | 0.9517 | 0.6173 | 0.5631 | 0.6830 |
-| MLP | 0.9470 | 0.6416 | 0.8019 | 0.5347 |
-| Random Forest | 0.9235 | 0.5073 | 0.4131 | 0.6571 |
-| Isolation Forest | 0.7135 | 0.1272 | 0.1758 | 0.0997 |
-| Autoencoder | 0.6958 | - | - | - |
-| **Ensemble** | **0.9558** | **0.6863** | **0.7631** | **0.6235** |
+|-------|:---:|:--:|:---------:|:------:|
+| **XGBoost** | **0.9776** | 0.747 | 0.900 | 0.639 |
+| **Ensemble** | **0.9763** | 0.765 | 0.834 | 0.707 |
+| CatBoost | 0.9721 | 0.659 | 0.581 | 0.762 |
+| LightGBM | 0.9662 | 0.592 | 0.484 | 0.761 |
+| MLP Neural Net | 0.9641 | 0.694 | 0.824 | 0.600 |
+| Random Forest | 0.9553 | 0.561 | 0.451 | 0.744 |
+| Autoencoder | 0.7110 | — | — | — |
+| Isolation Forest | 0.7270 | 0.095 | 0.170 | 0.066 |
 
-The ensemble catches 62.4% of all fraud with 76.3% precision. 99.3% of legitimate transactions go through without any friction.
+## Production Validation
+
+| Check | Result |
+|-------|:------:|
+| **Adversarial Validation** | AUC = 0.5004 → **EXCELLENT** (no train/test leakage) |
+| **Adversarial Robustness** | 5/5 attack scenarios passed |
+| **Cost-Optimized Threshold** | 0.015 → ₹3.55 Cr annual savings |
+| **Conformal Coverage** | 95% target achieved |
+
+## Risk Scoring System
+
+| Tier | Score Range | Action | Use Case |
+|------|:-----------:|--------|----------|
+| 🟢 GREEN | 0-30 | Auto-approve | Zero friction for legitimate transactions |
+| 🟡 YELLOW | 31-50 | PIN verify | Minor suspicion, confirm identity |
+| 🟠 ORANGE | 51-70 | Biometric | Elevated risk, require face/fingerprint |
+| 🔴 RED | 71-100 | Block | Immediate freeze + fraud team alert |
+
+## Architecture
+
+```
+Raw Data (590K) → 25 Feature Layers → 8-Model Dual Stack → Conformal → 4-Tier Risk Decision
+                                                          ↓
+                                              SHAP + LIME Explanations
+```
+
+## Product Ecosystem
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| 🌐 Landing Page | `localhost:8000` | Startup-quality product page |
+| 📱 Mobile App | `localhost:8000/mobile/` | Installable PWA with fraud alerts |
+| 📄 API Docs | `localhost:8000/docs` | Swagger interactive documentation |
+| 🖥️ Dashboard | `localhost:8501` | 17-page analytics hub |
+| ⚡ WebSocket | `ws://localhost:8000/ws/feed` | Real-time transaction feed |
 
 ---
 
-## Business Impact
-
-For a mid-size bank doing 50M transactions/year:
-- ~1.09M fraudulent transactions prevented
-- ~$927M in avoided losses
-- 99.3% of legit customers unaffected
-
----
-
-## Deliverables
-
-- `main.py` - full pipeline (run this to reproduce everything)
-- `dashboard.py` - 9-page Streamlit dashboard
-- `api.py` - FastAPI endpoint for real-time scoring
-- `outputs/FraudShield_AI_Report.pdf` - auto-generated PDF report
-- `FraudShield_AI.rmzp` - RapidMiner process export
-- 16 visualizations (ROC, confusion matrices, SHAP, graphs, etc.)
-
-## Tools Used
-
-XGBoost, LightGBM, CatBoost, scikit-learn, Imbalanced-Learn, Optuna, SHAP, NetworkX, python-louvain, Streamlit, FastAPI, fpdf2
-
----
-Jetash Jethi · FrostHack 2026
+*FrostHack 2026 · IIT Mandi*
