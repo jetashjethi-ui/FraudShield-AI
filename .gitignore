@@ -50,7 +50,12 @@ pyrightconfig.json
 # Brainstorming notes
 idea.txt
 more idea
+IDEAS.md
+DEMO_SCRIPT.md
 
 # Misc
 *.zip
+*.rmzp
+*.pptx
 synthetic_mobile/
+outputs_2/
