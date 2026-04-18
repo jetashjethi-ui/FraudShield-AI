@@ -31,7 +31,6 @@ data/
 outputs/models/
 outputs/model_artifacts/
 outputs/pipeline_log.txt
-outputs/results/scored_transactions.csv
 outputs/results/oof_predictions.csv
 *.pkl
 *.joblib
