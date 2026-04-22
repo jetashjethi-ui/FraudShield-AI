@@ -14,7 +14,7 @@
 | **Calibration** | Isotonic probability calibration |
 | **Threshold** | Cost-optimized at 0.015 (FN=₹850, FP=₹25) → 89% recall |
 | **Explainability** | SHAP + LIME + Counterfactual analysis |
-| **Dashboard** | 17-page interactive Streamlit dashboard |
+| **Dashboard** | 11-page interactive Streamlit dashboard |
 | **Mobile App** | Progressive Web App with WebSocket live feed |
 | **API** | FastAPI REST API with Swagger + WebSocket `/ws/feed` |
 | **Deployment** | Docker + Render.com + Streamlit Cloud |
