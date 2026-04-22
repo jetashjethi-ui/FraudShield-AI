@@ -2,7 +2,26 @@
 
 Real-time fraud detection system built on the IEEE-CIS dataset (590K transactions). Uses a multi-model ensemble with 25 engineered feature layers to detect fraud with an AUC of **0.9776**.
 
+> **[Live Demo](https://fraudshield-ai.streamlit.app)** · **[Documentation](DOCUMENTATION.md)** · **[Model Card](MODEL_CARD.md)**
 
+---
+
+## Dashboard Preview
+
+### Command Center
+![Command Center](screenshots/command_center.png)
+
+### Risk Analyzer — Real-time Transaction Scoring
+![Risk Analyzer](screenshots/risk_analyzer.png)
+
+### Model Lab — Multi-Metric Radar & ROC Curves
+![Model Lab](screenshots/model_lab.png)
+
+### Fraud Network — Graph-Based Detection
+![Fraud Network](screenshots/fraud_network.png)
+
+### Analytics — Score Distribution & Routing
+![Analytics](screenshots/analytics.png)
 
 ---
 
