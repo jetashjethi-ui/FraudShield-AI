@@ -72,4 +72,4 @@ Raw Data (590K) → 25 Feature Layers → 8-Model Dual Stack → Conformal → 4
 
 ---
 
-*FrostHack 2026 · IIT Mandi*
+*FraudShield AI*

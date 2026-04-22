@@ -3,8 +3,7 @@ FraudShield AI — Adaptive Real-Time Fraud Detection
 with Explainable Risk Intelligence
 
 18 Detection Layers | 7 Models · 4-Model Stacking | Graph Analysis | SHAP XAI
-FrostHack — March 2026
-"""
+FraudShield AI"""
 
 import sys
 import os

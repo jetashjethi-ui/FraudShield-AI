@@ -617,4 +617,4 @@ outputs/
 
 ---
 
-*Jetash Jethi · FrostHack April 2026*
+*Jetash Jethi · FraudShield AI

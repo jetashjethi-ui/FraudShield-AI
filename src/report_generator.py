@@ -73,7 +73,7 @@ def generate_pdf_report(output_dir):
     pdf.ln(6)
     pdf.set_font('Helvetica', 'I', 10)
     pdf.cell(0, 6, f'Report generated: {datetime.now().strftime("%B %d, %Y at %H:%M")}', align='C', new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, 'FrostHack Financial Services Track', align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, 'FraudShield AI', align='C', new_x="LMARGIN", new_y="NEXT")
     pdf.ln(20)
 
     # Architecture summary

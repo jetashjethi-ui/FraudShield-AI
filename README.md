@@ -2,7 +2,7 @@
 
 Real-time fraud detection system built on the IEEE-CIS dataset (590K transactions). Uses a multi-model ensemble with 25 engineered feature layers to detect fraud with an AUC of **0.9776**.
 
-Built for [FrostHack 2026](https://frosthack.iitmandi.ac.in/) · IIT Mandi
+
 
 ---
 
