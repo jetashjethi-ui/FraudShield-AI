@@ -1,0 +1,255 @@
+# FraudShield AI — Demo Script (5 min)
+
+> **Don't memorize.** Just follow the clicks and talk naturally.
+
+---
+
+## 🎬 Opening (20 sec)
+
+**Say:**
+> "FraudShield AI — real-time fraud detection trained on 590K real bank transactions. It scores every transaction in under 50ms, explains why, and tells the bank what to do — approve, PIN, biometric, or block."
+
+---
+
+## 1️⃣ Command Center (50 sec)
+
+**On screen:** Already here. Scroll slowly.
+
+**Say while pointing:**
+> "4 KPIs at top — 0.9776 AUC, 0.76 F1, 83% precision with only 5 false positives per thousand, and 25 detection layers all live."
+
+**Point to Architecture Pipeline:**
+> "5-stage pipeline: raw data → 25 feature layers → 8-model ensemble → conformal calibration → 4-tier routing."
+
+**Point to Model Leaderboard:**
+> "7 models ranked by AUC. XGBoost leads at 0.9776, stacking ensemble at 0.9763."
+
+**Point to Detection Layers grid (quickly):**
+> "25 layers — velocity, graph analysis, behavioral DNA, SIM swap, mule network, and more."
+
+---
+
+## 2️⃣ Risk Analyzer (50 sec) ⭐ KEY DEMO
+
+**Click:** `Risk Analyzer`
+
+**Do quickly:**
+1. Amount → `5000`, Category → `Digital Goods`, Hour → `3`, Velocity → `15`
+2. Check ✅ New Device
+3. Click **RUN RISK SCORE**
+
+**Say when gauge shows:**
+> "Score ~75, RED zone — system blocks this. On the right: explainable risk factors — SHAP tells us exactly WHY. High amount, 3 AM, new device, high velocity. Every decision is auditable for regulators."
+
+---
+
+## 3️⃣ Model Lab (30 sec)
+
+**Click:** `Model Lab`
+
+**Say (don't wait, talk while it loads):**
+> "Radar chart comparing all models on 5 metrics — AUC, precision, recall, F1, specificity. Below that, interactive ROC curves. XGBoost and Stacking dominate but even our weakest model hits 0.72."
+
+---
+
+## 4️⃣ Fraud Network (25 sec)
+
+**Click:** `Fraud Network`
+
+**Say:**
+> "Graph-based detection using NetworkX. Each dot is a transaction — connected if they share cards, devices, or addresses. Green dots spread naturally. Red clusters are fraud rings — detected automatically using Louvain community detection."
+
+---
+
+## 5️⃣ Analytics (20 sec)
+
+**Click:** `Analytics` — scroll quickly
+
+**Say:**
+> "Score distribution: most transactions land 15-35, safe zone. Only 1.4% flagged high-risk. Routing donut shows 55% auto-approved, 41% need PIN, 2% biometric, 1.3% blocked — legitimate customers aren't disrupted."
+
+---
+
+## 6️⃣ Speed Round — Remaining Pages (40 sec)
+
+**Click through fast, one sentence each:**
+
+**`Flagged Queue`:**
+> "Operations team sees all flagged transactions with risk scores and categories — RED block, ORANGE biometric."
+
+**`ROI Calculator`:**
+> "Plug in your bank's numbers — it calculates annual savings. Shows before vs after FraudShield deployment."
+
+**`Robustness`:**
+> "We tested 5 adversarial attacks — Gaussian noise, feature zeroing, boundary probing — all passed. AUC stays above 0.92 under attack."
+
+**`Threshold Tuner`:**
+> "Cost-sensitive threshold optimization. FN costs ₹850, FP costs ₹25with configurable rates — finds the sweet spot."
+
+**`Risk Heatmap`:**
+> "Amount vs time-of-day risk density. Hot spots at high amounts + late night — exactly where fraud concentrates."
+
+---
+
+## 7️⃣ Live Stream (15 sec)
+
+**Click:** `Live Stream` → Click **START STREAM**
+
+**Say (while transactions flow):**
+> "Real-time WebSocket feed — transactions scored live with color-coded risk. This connects to our FastAPI backend which also auto-generates PDF audit reports."
+
+---
+
+## 🏁 Closing (10 sec)
+
+**Say:**
+> "End-to-end system: 25 feature layers, 8-model ensemble, 0.9776 AUC, explainable decisions, graph fraud detection, and production-ready with Docker, API, and live deployment. Thank you."
+
+---
+
+## ❓ Judge Q&A Cheat Sheet
+
+| Question | Answer |
+|----------|--------|
+| What dataset? | IEEE-CIS Kaggle — 590K real bank transactions, 434 features |
+| Why ensemble? | Different models catch different patterns; stacking combines strengths |
+| Class imbalance? | 3.5% fraud. Stratified k-fold, class weights, threshold optimization |
+| Conformal prediction? | Wraps any model to guarantee 95% prediction coverage |
+| Inference speed? | Under 50ms via FastAPI |
+| Adversarial robustness? | 5 attack types tested, all passed, AUC stays >0.92 |
+| PDF reports? | Auto-generated after pipeline run — includes metrics, charts, recommendations |
+| How deployed? | Streamlit Cloud (dashboard) + Docker (API) + Render-ready |
+| Mobile app? | PWA with transaction scanning, WebSocket alerts, vibration feedback |
+| Why 25 layers? | Each captures a different fraud signal — more diversity = better ensemble |
+| Train/test leakage? | Adversarial validation AUC = 0.5004 — confirmed no leakage |
+
+
+> **Tip:** Don't memorize. Just follow the flow and talk naturally. Each section tells you **what to click** and **what to say**.
+
+---
+
+## 🎬 Opening (30 sec)
+
+**Say:**
+> "This is FraudShield AI — a real-time fraud detection system. We trained it on 590,000 real bank transactions from the IEEE-CIS dataset. It scores every transaction in under 50 milliseconds and tells the bank exactly what to do — approve, ask for PIN, request biometric, or block."
+
+**Click:** You should already be on **Command Center**
+
+---
+
+## 1️⃣ Command Center (60 sec)
+
+**On screen:** The main dashboard with KPIs, pipeline, and leaderboard
+
+**Say while scrolling down slowly:**
+> "The system runs on a 5-stage pipeline:
+> - First, we ingest 590K transactions with 434 raw features
+> - Then we engineer **25 detection layers** — things like velocity patterns, behavioral DNA, graph analysis, SIM swap detection
+> - These feed into an **8-model ensemble** — XGBoost, LightGBM, CatBoost, Random Forest, MLP, Isolation Forest, TabNet, and an Autoencoder
+> - We calibrate using **conformal prediction** — so we can guarantee 95% coverage
+> - Finally, a 4-tier risk routing decides: approve, PIN, biometric, or block"
+
+**Point to Model Leaderboard:**
+> "Our best model — XGBoost — hits **0.9776 AUC**. The stacking ensemble is close at 0.9763."
+
+**Point to Detection Layers grid:**
+> "These are all 25 feature layers. Each one captures a different fraud signal."
+
+---
+
+## 2️⃣ Risk Analyzer (60 sec)
+
+**Click:** `Risk Analyzer` in sidebar
+
+**Say:**
+> "This is the interactive scoring engine. Let me show you a suspicious transaction."
+
+**Do this:**
+1. Set **Amount** to `5000`
+2. Set **Category** to `W — Digital Goods`
+3. Set **Hour** to `3` (3 AM)
+4. Set **Velocity** to `15` (15 txns in 24h)
+5. Check ✅ **New/Unknown Device**
+6. Click **RUN RISK SCORE**
+
+**Say when results appear:**
+> "Score is around 75 — that's in the RED zone. The system would block this transaction. 
+> On the right you can see the **explainable risk factors** — it's flagging the high amount, the 3 AM timing, the new device, and the high velocity. 
+> This is powered by SHAP — so every decision is explainable to regulators."
+
+---
+
+## 3️⃣ Model Lab (45 sec)
+
+**Click:** `Model Lab` in sidebar
+
+**Say:**
+> "Here we can compare all 7 models head-to-head."
+
+**Point to Radar Chart:**
+> "The radar chart shows 5 metrics — AUC, Precision, Recall, F1, and Specificity. XGBoost and the Stacking Ensemble dominate across all dimensions."
+
+**Point to ROC Curves:**
+> "And these are the ROC curves. You can see even our worst model — Isolation Forest — still achieves 0.72 AUC. The top models are all above 0.96."
+
+---
+
+## 4️⃣ Fraud Network (45 sec)
+
+**Click:** `Fraud Network` in sidebar
+
+**Say:**
+> "This is our graph-based fraud detection. Each dot is a transaction. We connect them if they share cards, devices, email domains, or addresses."
+
+**Point to clusters:**
+> "Green dots are legitimate — they're spread out, no shared infrastructure. 
+> But see these **red and orange clusters**? Those are fraud rings — multiple transactions sharing the same card or device. 
+> We use **Louvain community detection** from NetworkX to automatically find these clusters."
+
+**Point to stats below:**
+> "Out of 200 sampled transactions, only 3 are high-risk — but they cluster together, which is exactly what real fraud rings look like."
+
+---
+
+## 5️⃣ Analytics (45 sec)
+
+**Click:** `Analytics` in sidebar
+
+**Say:**
+> "The analytics page shows the full score distribution across 10,000 transactions."
+
+**Point to histogram:**
+> "Most transactions score between 15-35 — that's the safe zone. The red tail on the right is the ~1.4% flagged as high-risk."
+
+**Point to donut chart:**
+> "Our 4-tier routing: 55% get auto-approved, 41% need just a PIN, about 2% need biometric verification, and only 1.3% get blocked. So we're not blocking legitimate customers."
+
+---
+
+## 🏁 Closing (30 sec)
+
+**Say:**
+> "To summarize:
+> - **0.9776 AUC** on real bank data
+> - **25 feature layers** catching different fraud patterns
+> - **8 models** in an ensemble with conformal prediction
+> - **Explainable** decisions using SHAP
+> - **Graph analysis** to detect fraud rings
+> - Deployed live with a REST API and WebSocket streaming
+> 
+> The whole thing runs end-to-end — from raw data to a production-ready system with 4-tier risk routing and real-time scoring."
+
+---
+
+## ❓ Common Judge Questions
+
+| Question | Quick Answer |
+|----------|-------------|
+| "What dataset?" | IEEE-CIS from Kaggle — 590K real bank transactions, 434 features |
+| "Why not just one model?" | Ensemble catches different patterns; stacking combines their strengths |
+| "How do you handle class imbalance?" | 3.5% fraud rate. We use stratified k-fold, class weights, and threshold optimization |
+| "What's conformal prediction?" | It wraps any model to give uncertainty guarantees — we guarantee 95% coverage |
+| "How fast is inference?" | Under 50ms per transaction via FastAPI |
+| "What about adversarial attacks?" | We tested 5 attack types — all passed. AUC stays above 0.92 under perturbation |
+| "Why 25 feature layers?" | Each captures a different fraud signal — velocity, graph, behavioral. More diverse features = better ensemble |
+| "How is it deployed?" | Streamlit Cloud for dashboard, Docker for API, also deployable to Render |
