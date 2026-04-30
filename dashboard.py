@@ -214,14 +214,14 @@ h1, h2, h3, h4 {{ color: {TEXT}; font-family: 'IBM Plex Sans', sans-serif; font-
 
 /* ─── TICKER / PILL / BADGE ────────────────── */
 .ticker {{
-  display:flex; gap: 28px; align-items:center;
+  display:flex; gap: 16px; align-items:center; flex-wrap: wrap;
   padding: 10px 18px;
   border: 1px solid {BORDER};
   border-radius: 10px;
   background: {SURFACE};
   overflow:hidden;
   font-family:'IBM Plex Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }}
 .ticker .tick-item {{ color: {TEXT_DIM}; white-space: nowrap; }}
 .ticker .tick-item .v {{ color: {TEXT}; margin-left: 6px; }}
