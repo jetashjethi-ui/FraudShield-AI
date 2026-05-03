@@ -58,3 +58,11 @@ DEMO_SCRIPT.md
 *.pptx
 synthetic_mobile/
 outputs_2/
+# Temp files
+slide_*.png
+*.exe
+*.rmp
+gen_*.py
+fix_ports.py
+fraudshield-ai*.pdf
+dataset_sample.csv
