@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8000
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
+RUN apt-get update && apt-get install -y --no-install-recommends curl libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.deploy.txt ./requirements.deploy.txt
