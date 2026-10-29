@@ -10,7 +10,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -23,21 +23,31 @@ var/
 venv/
 .env
 .venv
+.backend-venv/
 
 # Data files (too large for GitHub)
 data/
 
 # Generated model binaries and large output files
 outputs/models/
-outputs/model_artifacts/
 outputs/pipeline_log.txt
 outputs/results/oof_predictions.csv
+outputs/results/oof_predictions.json
+outputs/results/backend_run.log
+outputs/results/*.csv
+outputs/visualizations/
+outputs/FraudShield_AI_Report.pdf
 *.pkl
 *.joblib
 *.h5
 
+# Keep the versioned inference bundle used by the clean-checkout demo.
+!outputs/model_artifacts/*.pkl
+
 # CatBoost training logs
 catboost_info/
+.pytest_cache/
+.streamlit/
 
 # IDE config
 .vscode/
@@ -46,23 +56,13 @@ catboost_info/
 .DS_Store
 pyrightconfig.json
 
-# Brainstorming notes
-idea.txt
-more idea
-IDEAS.md
-DEMO_SCRIPT.md
-
 # Misc
 *.zip
 *.rmzp
 *.pptx
-synthetic_mobile/
-outputs_2/
 # Temp files
 slide_*.png
 *.exe
 *.rmp
-gen_*.py
-fix_ports.py
-fraudshield-ai*.pdf
 dataset_sample.csv
+screenshots/

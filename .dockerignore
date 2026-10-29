@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+.venv
+.backend-venv
+venv
+__pycache__
+.pytest_cache
+catboost_info
+data
+*.rmp
+*.rmzp
+*.exe
+*.pdf
+outputs/results/*.csv
+outputs/visualizations

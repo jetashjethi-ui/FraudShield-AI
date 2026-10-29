@@ -17,42 +17,17 @@ def compute_risk_scores(df, predictions):
     print("RISK SCORING ENGINE")
     print("=" * 70)
 
-    ml_proba = predictions.get('ensemble_proba', np.zeros(len(df)))
-    iso_scores = predictions.get('iso_scores', np.zeros(len(df)))
-
-    def safe_col(col, default=0):
-        return df[col].fillna(default).values if col in df.columns else np.full(len(df), default)
-
-    # Weighted risk formula — now includes graph features
-    risk_raw = (
-        ml_proba * 30 +                                        # ML ensemble probability
-        iso_scores * 15 +                                       # Isolation Forest anomaly
-        safe_col('is_unusual_device') * 8 +                     # SIM swap (Layer 3)
-        safe_col('is_shared_device') * 6 +                      # Mule network (Layer 7)
-        safe_col('is_low_activity_user') * 4 +                  # Dormant account (Layer 8)
-        safe_col('first_txn_high_value') * 7 +                  # New account abuse (Layer 11)
-        safe_col('is_suspicious_round') * 4 +                   # Round amount (Layer 9)
-        safe_col('is_night') * np.clip(safe_col('amount_zscore'), 0, 5) * 2 +
-        safe_col('product_fraud_rate') * 3 +                    # Risky merchant (Layer 6)
-        safe_col('round_x_new_device') * 3 +                    # Combo feature
-        safe_col('category_mismatch_risk') * 2 +                # Category mismatch (Layer 10)
-        safe_col('is_rapid_fire') * 5 +                         # Velocity (Layer 12)
-        # Graph features (Layer 16)
-        safe_col('graph_community_fraud_rate') * 6 +            # High-fraud community
-        safe_col('graph_fraud_neighbor_ratio') * 4 +            # Connected to fraudsters
-        safe_col('graph_is_bridge') * 3 +                       # Bridge node (money mule)
-        safe_col('graph_betweenness') * 100 * 2                 # Network centrality
-    )
-
-    # Normalize to 0-100
-    risk_max = risk_raw.max() if risk_raw.max() > 0 else 1
-    risk_score = np.clip((risk_raw / risk_max) * 100, 0, 100)
+    ml_proba = np.asarray(predictions.get('ensemble_proba', np.zeros(len(df))), dtype=float)
+    threshold = float(predictions.get('optimal_threshold', 0.5))
+    # This policy matches the API: same calibrated probability, same fixed
+    # score, and no per-batch normalization or hidden rule-score adjustments.
+    risk_score = np.clip(ml_proba * 100.0, 0, 100)
 
     # Risk categories (Layer 5: Adaptive Step-Up Auth)
     risk_category = np.where(
-        risk_score >= 71, 'RED_BLOCK',
-        np.where(risk_score >= 51, 'ORANGE_BIOMETRIC',
-                 np.where(risk_score >= 31, 'YELLOW_PIN_VERIFY',
+        ml_proba >= 0.75, 'RED_BLOCK',
+        np.where(ml_proba >= 0.35, 'ORANGE_BIOMETRIC',
+                 np.where(ml_proba >= threshold, 'YELLOW_PIN_VERIFY',
                           'GREEN_APPROVE')))
 
     auth_recommendation = np.where(

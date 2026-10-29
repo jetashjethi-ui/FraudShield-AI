@@ -2,10 +2,12 @@
   "name": "Deep Autoencoder",
   "type": "unsupervised_anomaly_detection",
   "architecture": "Input -> 64 -> 16 (bottleneck) -> 64 -> Output",
-  "auc": 0.7109832039501236,
-  "mean_error_normal": 0.34508449553133885,
-  "mean_error_fraud": 1.1933673828065927,
-  "error_ratio": 3.4581889312909366,
-  "threshold": 0.7989813037024917,
-  "training_epochs": 14
+  "auc": 0.6810957132061254,
+  "mean_error_normal": 13.118728637695312,
+  "mean_error_fraud": 0.5952414870262146,
+  "error_ratio": 0.04537341258175351,
+  "threshold": 0.5602235794067383,
+  "training_epochs": 73,
+  "training_rows_sampled": 40000,
+  "holdout_rows_sampled": 15000
 }

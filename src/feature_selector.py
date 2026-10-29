@@ -34,13 +34,13 @@ def select_features(X_train, y_train, min_importance_pct=0.001, n_folds=3):
     model = lgb.LGBMClassifier(
         n_estimators=200, max_depth=7, learning_rate=0.05,
         num_leaves=63, subsample=0.8, colsample_bytree=0.8,
-        is_unbalance=True, random_state=42, n_jobs=-1, verbosity=-1
+        is_unbalance=True, random_state=42, n_jobs=4, verbosity=-1
     )
 
     # Use sample for speed
     rng = np.random.RandomState(42)
-    sample_size = min(80000, len(X_train))
-    sample_idx = rng.choice(len(X_train), sample_size, replace=False)
+    sample_size = min(30000, len(X_train))
+    sample_idx = np.linspace(0, len(X_train) - 1, sample_size, dtype=int)
     if hasattr(X_train, 'iloc'):
         X_sample = X_train.iloc[sample_idx]
     else:
@@ -64,6 +64,10 @@ def select_features(X_train, y_train, min_importance_pct=0.001, n_folds=3):
 
     avg_importance = importance_sum / n_folds
     total_importance = avg_importance.sum()
+
+    if not np.isfinite(total_importance) or total_importance <= 0:
+        print("  [SELECT] No usable importance values; retaining all features.")
+        return feature_names, []
 
     # Compute relative importance
     relative_importance = avg_importance / total_importance

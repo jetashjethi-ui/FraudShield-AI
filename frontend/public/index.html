@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070707" />
+    <meta name="color-scheme" content="dark" />
+    <title>FraudShield AI — Fraud Intelligence, Risk in Motion</title>
+    <meta
+      name="description"
+      content="FraudShield AI research dashboard. Score transactions, run batch scoring, and review model evaluation and service status against the FraudShield FastAPI service."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap"
+    />
+    <link rel="stylesheet" href="assets/css/fraudshield.css" />
+    <link rel="modulepreload" href="assets/vendor/three/three.module.min.js" />
+    <script type="module" src="assets/js/hero.js"></script>
+    <script type="module" src="assets/js/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="?view=overview" data-nav="overview">Skip to dashboard</a>
+
+    <header class="nav" id="nav">
+      <a class="brand" href="./" data-to-hero aria-label="FraudShield AI, back to top">
+        FraudShield<span class="brand-dot" aria-hidden="true"></span>
+      </a>
+      <div class="nav-menu" id="nav-menu">
+        <nav aria-label="Dashboard sections">
+          <ul class="nav-links">
+            <li><a class="nav-link" href="?view=overview" data-nav="overview"><span class="num">01</span>Overview</a></li>
+            <li><a class="nav-link" href="?view=score" data-nav="score"><span class="num">02</span>Score</a></li>
+            <li><a class="nav-link" href="?view=batch" data-nav="batch"><span class="num">03</span>Batch</a></li>
+            <li><a class="nav-link" href="?view=performance" data-nav="performance"><span class="num">04</span>Performance</a></li>
+            <li><a class="nav-link" href="?view=roi" data-nav="roi"><span class="num">05</span>ROI</a></li>
+            <li><a class="nav-link" href="?view=status" data-nav="status"><span class="num">06</span>System</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="nav-status" role="status" aria-live="polite">
+        <span class="status-dot" data-slot="nav-dot" data-state="checking" aria-hidden="true"></span>
+        <span class="nav-status-text" data-slot="nav-status">Checking API</span>
+      </div>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
+    </header>
+
+    <section class="hero" id="hero" data-hero-state="loading" aria-labelledby="hero-title">
+      <div class="hero-canvas" id="hero-canvas" aria-hidden="true"></div>
+      <div class="hero-fallback" aria-hidden="true">
+        <div class="hero-fallback-orb"></div>
+        <p class="hero-fallback-note">Static frame · WebGL unavailable</p>
+      </div>
+      <div class="hero-vignette" aria-hidden="true"></div>
+
+      <div class="hero-copy hero-copy--tl">
+        <p class="eyebrow">01 — Discipline</p>
+        <h1 class="display" id="hero-title">
+          <span class="sr-only">FraudShield AI: </span>
+          <span class="line-mask"><span>Fraud</span></span>
+          <span class="line-mask"><span><em>Intelligence</em></span></span>
+        </h1>
+      </div>
+
+      <div class="hero-center">
+        <button class="init-btn" id="initialize" type="button">Initialize</button>
+        <p class="hero-note">Research &amp; demo scoring console</p>
+      </div>
+
+      <div class="hero-copy hero-copy--br">
+        <p class="eyebrow">02 — Method</p>
+        <p class="display" aria-hidden="true">
+          <span class="line-mask"><span>Risk</span></span>
+          <span class="line-mask"><span><em>In Motion</em></span></span>
+        </p>
+      </div>
+
+      <p class="hero-meta">FastAPI · same-origin · no data stored</p>
+      <div class="scroll-cue" aria-hidden="true">Scroll</div>
+    </section>
+
+    <main class="app" id="app" tabindex="-1">
+      <div class="view-bar">
+        <span data-slot="crumb">01 — Overview</span>
+        <a class="link-btn" href="./" data-to-hero><span class="arrow" aria-hidden="true">↑</span> Back to hero</a>
+      </div>
+
+      <!-- 01 Overview -->
+      <section class="view" data-view="overview" aria-labelledby="t-overview">
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>01 — Overview</p>
+          <h2 class="view-title" id="t-overview" tabindex="-1" data-reveal>Operational overview</h2>
+          <p class="lead" data-reveal>
+            FraudShield AI is a research and demo tool for scoring card transactions with an ensemble of fraud models. It returns a
+            risk score, tier and explanation. It does not process, approve or block real payments.
+          </p>
+        </header>
+
+        <div class="statement" aria-hidden="true" data-reveal>
+          <div class="statement-track">
+            <span class="outline">Every transaction is a question.</span><span>Every score is evidence.</span>
+            <span class="outline">Every transaction is a question.</span><span>Every score is evidence.</span>
+          </div>
+        </div>
+
+        <div data-slot="overview-alert"></div>
+
+        <section class="section" aria-labelledby="s-ov-status">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">A — Service</p>
+              <h3 class="section-title" id="s-ov-status">Live service status</h3>
+            </div>
+            <span class="section-meta">GET /health · /model-info · /metrics</span>
+          </div>
+          <ul class="rows" data-slot="overview-status"></ul>
+        </section>
+
+        <section class="section" aria-labelledby="s-ov-tiers">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">B — Routing</p>
+              <h3 class="section-title" id="s-ov-tiers">Four-tier risk routing</h3>
+            </div>
+            <span class="section-meta">decision_threshold · /model-info</span>
+          </div>
+          <ul class="rows" data-slot="overview-tiers"></ul>
+        </section>
+
+        <section class="section" aria-labelledby="s-ov-arch">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">C — Architecture</p>
+              <h3 class="section-title" id="s-ov-arch">Declared by the API</h3>
+            </div>
+            <span class="section-meta">stacking_order · /model-info</span>
+          </div>
+          <ul class="rows" data-slot="overview-arch"></ul>
+        </section>
+
+        <section class="section" aria-labelledby="s-ov-session">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">D — Session</p>
+              <h3 class="section-title" id="s-ov-session">This session</h3>
+            </div>
+            <div class="btn-row">
+              <a class="btn btn--sm" href="?view=score" data-nav="score">Score a transaction</a>
+              <a class="btn btn--ghost btn--sm" href="?view=batch" data-nav="batch">Batch upload</a>
+            </div>
+          </div>
+          <ul class="rows" data-slot="overview-session"></ul>
+        </section>
+      </section>
+
+      <!-- 02 Score -->
+      <section class="view" data-view="score" aria-labelledby="t-score" hidden>
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>02 — Score</p>
+          <h2 class="view-title" id="t-score" tabindex="-1" data-reveal>Score a transaction</h2>
+          <p class="lead" data-reveal>
+            Fields match the backend’s <code class="inline">TransactionRequest</code>. Add optional trained-model features in the JSON field when needed.
+          </p>
+        </header>
+
+        <div class="split">
+          <form id="score-form" novalidate aria-describedby="score-summary">
+            <fieldset class="fieldset" data-reveal>
+              <legend class="eyebrow">A — Transaction</legend>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="f-TransactionAmt">Amount (USD) <span class="req">Required</span></label>
+                  <input class="input" id="f-TransactionAmt" name="TransactionAmt" type="text" inputmode="decimal" autocomplete="off" placeholder="599.99" required aria-describedby="h-TransactionAmt e-TransactionAmt" />
+                  <p class="hint" id="h-TransactionAmt">TransactionAmt · number ≥ 0</p>
+                  <p class="error" id="e-TransactionAmt"></p>
+                </div>
+                <div class="field">
+                  <label for="f-ProductCD">Product code</label>
+                  <select class="select" id="f-ProductCD" name="ProductCD" aria-describedby="h-ProductCD">
+                    <option value="W" selected>W</option>
+                    <option value="H">H</option>
+                    <option value="C">C</option>
+                    <option value="S">S</option>
+                    <option value="R">R</option>
+                  </select>
+                  <p class="hint" id="h-ProductCD">ProductCD · API default W</p>
+                  <p class="error" id="e-ProductCD"></p>
+                </div>
+                <div class="field">
+                  <label for="f-hour_of_day">Hour of day</label>
+                  <div class="range-row">
+                    <input class="range" id="f-hour_of_day" name="hour_of_day" type="range" min="0" max="23" step="1" value="12" aria-describedby="h-hour_of_day" />
+                    <output class="range-out" id="o-hour_of_day" for="f-hour_of_day">12:00</output>
+                  </div>
+                  <p class="hint" id="h-hour_of_day">hour_of_day · integer 0–23</p>
+                  <p class="error" id="e-hour_of_day"></p>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="fieldset" data-reveal>
+              <legend class="eyebrow">B — Card &amp; identity</legend>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="f-card1">Card ID 1</label>
+                  <input class="input" id="f-card1" name="card1" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-describedby="h-card1 e-card1" />
+                  <p class="hint" id="h-card1">card1 · integer · API default 0</p>
+                  <p class="error" id="e-card1"></p>
+                </div>
+                <div class="field">
+                  <label for="f-card2">Card ID 2</label>
+                  <input class="input" id="f-card2" name="card2" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-card2 e-card2" />
+                  <p class="hint" id="h-card2">card2 · optional number</p>
+                  <p class="error" id="e-card2"></p>
+                </div>
+                <div class="field">
+                  <label for="f-card3">Card ID 3</label>
+                  <input class="input" id="f-card3" name="card3" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-card3 e-card3" />
+                  <p class="hint" id="h-card3">card3 · optional number</p>
+                  <p class="error" id="e-card3"></p>
+                </div>
+                <div class="field">
+                  <label for="f-card4">Card network</label>
+                  <input class="input" id="f-card4" name="card4" type="text" list="dl-card4" autocomplete="off" placeholder="Optional" aria-describedby="h-card4" />
+                  <datalist id="dl-card4"><option value="visa"></option><option value="mastercard"></option><option value="american express"></option><option value="discover"></option></datalist>
+                  <p class="hint" id="h-card4">card4 · optional string</p>
+                  <p class="error" id="e-card4"></p>
+                </div>
+                <div class="field">
+                  <label for="f-card5">Card ID 5</label>
+                  <input class="input" id="f-card5" name="card5" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-card5 e-card5" />
+                  <p class="hint" id="h-card5">card5 · optional number</p>
+                  <p class="error" id="e-card5"></p>
+                </div>
+                <div class="field">
+                  <label for="f-card6">Card category</label>
+                  <input class="input" id="f-card6" name="card6" type="text" list="dl-card6" autocomplete="off" placeholder="Optional" aria-describedby="h-card6" />
+                  <datalist id="dl-card6"><option value="debit"></option><option value="credit"></option></datalist>
+                  <p class="hint" id="h-card6">card6 · optional string</p>
+                  <p class="error" id="e-card6"></p>
+                </div>
+                <div class="field">
+                  <label for="f-addr1">Address ID</label>
+                  <input class="input" id="f-addr1" name="addr1" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-addr1 e-addr1" />
+                  <p class="hint" id="h-addr1">addr1 · optional number</p>
+                  <p class="error" id="e-addr1"></p>
+                </div>
+                <div class="field">
+                  <label for="f-addr2">Address ID 2</label>
+                  <input class="input" id="f-addr2" name="addr2" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-addr2 e-addr2" />
+                  <p class="hint" id="h-addr2">addr2 · optional number</p>
+                  <p class="error" id="e-addr2"></p>
+                </div>
+                <div class="field">
+                  <label for="f-dist1">Distance</label>
+                  <input class="input" id="f-dist1" name="dist1" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional" aria-describedby="h-dist1 e-dist1" />
+                  <p class="hint" id="h-dist1">dist1 · optional number</p>
+                  <p class="error" id="e-dist1"></p>
+                </div>
+                <div class="field">
+                  <label for="f-P_emaildomain">Email domain</label>
+                  <input class="input" id="f-P_emaildomain" name="P_emaildomain" type="text" list="dl-email" autocomplete="off" placeholder="Optional" aria-describedby="h-P_emaildomain" />
+                  <datalist id="dl-email"><option value="gmail.com"></option><option value="yahoo.com"></option><option value="hotmail.com"></option><option value="outlook.com"></option><option value="protonmail.com"></option></datalist>
+                  <p class="hint" id="h-P_emaildomain">P_emaildomain · optional string</p>
+                  <p class="error" id="e-P_emaildomain"></p>
+                </div>
+                <div class="field">
+                  <label for="f-DeviceInfo">Device info</label>
+                  <input class="input" id="f-DeviceInfo" name="DeviceInfo" type="text" autocomplete="off" placeholder="Optional" aria-describedby="h-DeviceInfo" />
+                  <p class="hint" id="h-DeviceInfo">DeviceInfo · optional string</p>
+                  <p class="error" id="e-DeviceInfo"></p>
+                </div>
+                <div class="field">
+                  <label for="f-DeviceType">Device type</label>
+                  <input class="input" id="f-DeviceType" name="DeviceType" type="text" autocomplete="off" placeholder="Optional" aria-describedby="h-DeviceType e-DeviceType" />
+                  <p class="hint" id="h-DeviceType">DeviceType · optional string</p>
+                  <p class="error" id="e-DeviceType"></p>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="fieldset" data-reveal>
+              <legend class="eyebrow">C — Timestamp &amp; model features</legend>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="f-transaction_timestamp">Transaction timestamp</label>
+                  <input class="input" id="f-transaction_timestamp" name="transaction_timestamp" type="text" autocomplete="off" placeholder="2026-10-29T03:15:00Z" aria-describedby="h-transaction_timestamp e-transaction_timestamp" />
+                  <p class="hint" id="h-transaction_timestamp">Optional ISO-8601 datetime. No timezone means UTC.</p>
+                  <p class="error" id="e-transaction_timestamp"></p>
+                </div>
+                <div class="field">
+                  <label for="f-extra_features">Additional model features</label>
+                  <textarea class="input" id="f-extra_features" name="extra_features" rows="4" spellcheck="false" placeholder='{"C1": 1, "V1": 0.42}' aria-describedby="h-extra_features e-extra_features"></textarea>
+                  <p class="hint" id="h-extra_features">Optional JSON object · up to 500 feature names, values may be strings, numbers, or null.</p>
+                  <p class="error" id="e-extra_features"></p>
+                </div>
+              </div>
+            </fieldset>
+
+            <div class="btn-row" data-reveal>
+              <button class="btn" type="submit">Run risk score</button>
+              <button class="btn btn--ghost" type="button" data-action="load-example">Load API example</button>
+              <button class="btn btn--ghost" type="reset">Reset</button>
+            </div>
+            <p class="form-summary" id="score-summary" aria-live="polite"></p>
+          </form>
+
+          <aside class="sticky" aria-label="Scoring result">
+            <div data-slot="score-result" aria-live="polite">
+              <div class="result-empty" data-reveal>
+                <p class="eyebrow">Result</p>
+                <p class="big">Awaiting a transaction.</p>
+                <p class="muted">The score, recommendation, model probabilities and context signals returned by POST /score appear here.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <section class="section" aria-labelledby="s-score-session">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">This session</p>
+              <h3 class="section-title" id="s-score-session">Scored in this session</h3>
+            </div>
+            <button class="btn btn--ghost btn--sm" type="button" data-action="clear-session">Clear session</button>
+          </div>
+          <div data-slot="score-session"></div>
+        </section>
+      </section>
+
+      <!-- 03 Batch -->
+      <section class="view" data-view="batch" aria-labelledby="t-batch" hidden>
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>03 — Batch</p>
+          <h2 class="view-title" id="t-batch" tabindex="-1" data-reveal>Batch scoring</h2>
+          <p class="lead" data-reveal>
+            Upload a CSV with 1–500 rows. Every row is validated before submission. Files with unsupported columns or invalid rows are not
+            sent.
+          </p>
+        </header>
+
+        <div class="stack" data-slot="batch-body">
+          <label class="dropzone" data-reveal>
+            <input id="batch-file" type="file" accept=".csv,text/csv" aria-describedby="batch-file-help" />
+            <span class="dropzone-title">Drop a CSV or browse</span>
+            <p id="batch-file-help">Header row required · UTF-8 · max 500 rows · max 5 MB</p>
+            <p class="accent" data-slot="batch-file-name">No file selected</p>
+          </label>
+
+          <div data-reveal>
+            <h3 class="sub-title">Supported columns (* required)</h3>
+            <ul class="schema-list" data-slot="batch-schema"></ul>
+          </div>
+
+          <div class="btn-row" data-reveal>
+            <button class="btn" type="button" data-action="batch-submit" disabled>Submit batch</button>
+            <button class="btn btn--ghost" type="button" data-action="batch-clear" disabled>Clear</button>
+            <button class="btn btn--ghost" type="button" data-action="batch-template">Download template</button>
+          </div>
+
+          <div class="stack" data-slot="batch-validation"></div>
+          <div data-slot="batch-preview"></div>
+          <div data-slot="batch-run" aria-live="polite"></div>
+          <div class="stack" data-slot="batch-results"></div>
+        </div>
+      </section>
+
+      <!-- 04 Performance -->
+      <section class="view" data-view="performance" aria-labelledby="t-performance" hidden>
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>04 — Performance</p>
+          <h2 class="view-title" id="t-performance" tabindex="-1" data-reveal>Model performance</h2>
+          <p class="lead" data-reveal>
+            Evaluation results come from the backend’s saved <code class="inline">model_metrics.json</code> through <code class="inline">GET /metrics</code>.
+          </p>
+        </header>
+        <div class="stack" data-slot="performance-body"></div>
+      </section>
+
+      <!-- 05 ROI -->
+      <section class="view" data-view="roi" aria-labelledby="t-roi" hidden>
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>05 — ROI</p>
+          <h2 class="view-title" id="t-roi" tabindex="-1" data-reveal>ROI estimate</h2>
+          <p class="lead" data-reveal>
+            Submit your assumptions to the backend. It calculates the estimate from measured ensemble precision and recall; results are not guaranteed savings.
+          </p>
+        </header>
+        <div class="split">
+          <div class="stack" data-reveal>
+            <p class="hint">All cost inputs are in USD. Percentage fields are entered as percentages and converted for the API.</p>
+            <form class="stack" data-slot="roi-form" novalidate>
+              <div class="field-grid" data-slot="roi-inputs"></div>
+              <p class="form-summary" data-slot="roi-status" role="status" aria-live="polite"></p>
+              <div class="btn-row">
+                <button class="btn" type="submit">Calculate ROI estimate</button>
+              </div>
+            </form>
+          </div>
+          <div class="sticky stack" data-reveal>
+            <div data-slot="roi-output" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 System -->
+      <section class="view" data-view="status" aria-labelledby="t-status" hidden>
+        <header class="view-head">
+          <p class="eyebrow" data-reveal>06 — System</p>
+          <h2 class="view-title" id="t-status" tabindex="-1" data-reveal>System status</h2>
+          <div class="btn-row" data-reveal>
+            <button class="btn btn--sm" type="button" data-action="status-refresh">Refresh now</button>
+            <label class="switch" for="status-auto">
+              <input id="status-auto" type="checkbox" role="switch" checked />
+              <span class="switch-track" aria-hidden="true"></span>
+              <span>Auto-refresh every 30 s</span>
+            </label>
+            <span class="section-meta" data-slot="status-checked" aria-live="polite">Not checked yet</span>
+          </div>
+        </header>
+        <div class="stack" data-slot="status-body"></div>
+        <section class="section" aria-labelledby="s-endpoints">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Endpoints</p>
+              <h3 class="section-title" id="s-endpoints">What this page calls</h3>
+            </div>
+            <span class="section-meta">The simulated /ws/feed is not used</span>
+          </div>
+          <ul class="rows" data-slot="status-endpoints"></ul>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>FraudShield AI · research &amp; demo tool · not production banking software · scores never block real payments</p>
+      <div class="footer-links">
+        <a href="docs">API docs</a>
+        <a href="mobile/">Mobile app</a>
+        <a href="./" data-to-hero>Back to top</a>
+      </div>
+    </footer>
+  </body>
+</html>

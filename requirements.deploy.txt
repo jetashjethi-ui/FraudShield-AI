@@ -1,7 +1,10 @@
 # Minimal deps for API deployment (no GPU, no training)
-fastapi>=0.100.0
-uvicorn>=0.22.0
-pydantic>=2.0.0
-numpy>=1.23.0
-pandas>=1.5.0
-scikit-learn>=1.2.0
+fastapi==0.162.0
+uvicorn==0.54.0
+pydantic==2.14.1
+numpy==2.5.4
+pandas==3.1.0
+scikit-learn==1.9.1
+xgboost==3.4.1
+lightgbm==4.7.0
+catboost==1.2.10

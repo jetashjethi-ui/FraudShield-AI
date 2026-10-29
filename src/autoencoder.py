@@ -151,11 +151,34 @@ def run_autoencoder_detection(X_train_original, y_train_original, X_test, y_test
     print("  [INFO] Training on normal transactions only (unsupervised)")
     print("  [INFO] Architecture: Input -> 64 -> 16 (bottleneck) -> 64 -> Output")
 
+    # sklearn's MLPRegressor is CPU-bound. Bound its sample size so the
+    # auxiliary anomaly model does not dominate memory on a 16 GB workstation.
+    rng = np.random.RandomState(42)
+
+    def sample_rows(X, y, limit):
+        if len(X) <= limit:
+            return X, np.asarray(y)
+        labels = np.asarray(y)
+        classes = np.unique(labels)
+        chosen = []
+        for label in classes:
+            class_idx = np.flatnonzero(labels == label)
+            want = max(1, round(limit * len(class_idx) / len(labels)))
+            chosen.extend(rng.choice(class_idx, min(want, len(class_idx)), replace=False).tolist())
+        if len(chosen) > limit:
+            chosen = rng.choice(np.asarray(chosen), limit, replace=False).tolist()
+        chosen = np.sort(np.asarray(chosen, dtype=int))
+        return (X.iloc[chosen] if hasattr(X, "iloc") else X[chosen]), labels[chosen]
+
+    X_train_sample, y_train_sample = sample_rows(X_train_original, y_train_original, 40000)
+    X_test_sample, y_test_sample = sample_rows(X_test, y_test, 15000)
+    print(f"  [INFO] Bounded autoencoder data: {len(X_train_sample):,} train / {len(X_test_sample):,} holdout rows")
+
     ae = FraudAutoencoder(encoding_dim=16, hidden_dim=64)
-    ae.fit(X_train_original, y_train_original)
+    ae.fit(X_train_sample, y_train_sample)
 
     # Evaluate
-    eval_results = ae.evaluate(X_test, y_test)
+    eval_results = ae.evaluate(X_test_sample, y_test_sample)
     print(f"\n  [RESULT] Autoencoder AUC: {eval_results['auc']:.4f}")
     print(f"  [RESULT] Mean error (normal): {eval_results['mean_error_normal']:.6f}")
     print(f"  [RESULT] Mean error (fraud):  {eval_results['mean_error_fraud']:.6f}")
@@ -172,6 +195,8 @@ def run_autoencoder_detection(X_train_original, y_train_original, X_test, y_test
         'error_ratio': eval_results['mean_error_fraud'] / max(eval_results['mean_error_normal'], 1e-8),
         'threshold': float(ae.threshold),
         'training_epochs': ae.autoencoder.n_iter_,
+        'training_rows_sampled': len(X_train_sample),
+        'holdout_rows_sampled': len(X_test_sample),
     }
 
     results_path = os.path.join(output_dir, "results", "autoencoder_results.json")

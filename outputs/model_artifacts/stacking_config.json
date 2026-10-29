@@ -1,0 +1,12 @@
+{
+  "base_models": [
+    "xgboost",
+    "lightgbm",
+    "catboost",
+    "random_forest",
+    "mlp"
+  ],
+  "threshold_source": "time_ordered_oof",
+  "score_method": "meta_learner",
+  "decision_threshold": 0.059
+}

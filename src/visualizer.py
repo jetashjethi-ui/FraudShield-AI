@@ -208,6 +208,9 @@ def plot_fraud_by_hour(df, viz_dir):
 def plot_fraud_by_product(df, viz_dir):
     """Fraud rate by ProductCD."""
     print("  → Fraud Rate by Product Code...")
+    if not {"ProductCD", "isFraud"}.issubset(df.columns):
+        print("    -> Skipped: raw ProductCD or isFraud is not available in this frame")
+        return
     fig, ax = plt.subplots(figsize=(8, 6))
     
     product_fraud = df.groupby('ProductCD').agg(

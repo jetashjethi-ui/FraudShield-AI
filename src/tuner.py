@@ -13,20 +13,34 @@ warnings.filterwarnings('ignore')
 import optuna
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 import lightgbm as lgb
 from catboost import CatBoostClassifier
 
 
-def tune_xgboost(X, y, n_trials=20, n_folds=3):
+def _trial_progress_callback(total_trials):
+    """Print periodic progress so a long serial tuning run does not look stuck."""
+    def report(study, trial):
+        completed = trial.number + 1
+        if completed == 1 or completed % 10 == 0 or completed == total_trials:
+            print(
+                f"    -> {completed}/{total_trials} trials; "
+                f"best chronological CV ROC-AUC: {study.best_value:.4f}",
+                flush=True,
+            )
+    return report
+
+
+def tune_xgboost(X, y, n_trials=5, n_folds=2, use_gpu=False):
     """Tune XGBoost hyperparameters with Optuna."""
 
     def objective(trial):
+        nonlocal use_gpu
         params = {
-            'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
-            'max_depth': trial.suggest_int('max_depth', 5, 12),
+            'n_estimators': trial.suggest_int('n_estimators', 120, 350),
+            'max_depth': trial.suggest_int('max_depth', 3, 8),
             'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.15, log=True),
             'min_child_weight': trial.suggest_int('min_child_weight', 10, 60),
             'subsample': trial.suggest_float('subsample', 0.7, 0.95),
@@ -36,15 +50,17 @@ def tune_xgboost(X, y, n_trials=20, n_folds=3):
             'reg_lambda': trial.suggest_float('reg_lambda', 0.5, 3.0),
             'eval_metric': 'auc',
             'random_state': 42,
-            'n_jobs': -1,
+            'n_jobs': 4,
             'verbosity': 0,
             'tree_method': 'hist',
-            'device': 'cuda',
+            'max_bin': 64,
         }
+        if use_gpu:
+            params['device'] = 'cuda'
 
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+        splitter = TimeSeriesSplit(n_splits=n_folds)
         aucs = []
-        for train_idx, val_idx in skf.split(X, y):
+        for train_idx, val_idx in splitter.split(X):
             if hasattr(X, 'iloc'):
                 X_tr, X_val = X.iloc[train_idx], X.iloc[val_idx]
             else:
@@ -52,27 +68,42 @@ def tune_xgboost(X, y, n_trials=20, n_folds=3):
             y_tr, y_val = y.iloc[train_idx], y.iloc[val_idx]
 
             model = xgb.XGBClassifier(**params)
-            model.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=False)
+            try:
+                model.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=False)
+            except Exception as exc:
+                message = str(exc).lower()
+                if not use_gpu or not any(word in message for word in ('cuda', 'gpu', 'memory', 'device')):
+                    raise
+                print(f"    [TUNE] XGBoost GPU fit failed ({exc}); continuing tuning on CPU.")
+                use_gpu = False
+                params['device'] = 'cpu'
+                model = xgb.XGBClassifier(**params)
+                model.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=False)
             preds = model.predict_proba(X_val)[:, 1]
             aucs.append(roc_auc_score(y_val, preds))
 
         return np.mean(aucs)
 
     study = optuna.create_study(direction='maximize', study_name='xgboost_tune')
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    study.optimize(
+        objective,
+        n_trials=n_trials,
+        callbacks=[_trial_progress_callback(n_trials)],
+        show_progress_bar=False,
+    )
 
     print(f"    -> Best XGBoost AUC: {study.best_value:.4f}")
     print(f"    -> Best params: {study.best_params}")
     return study.best_params
 
 
-def tune_lightgbm(X, y, n_trials=20, n_folds=3):
+def tune_lightgbm(X, y, n_trials=5, n_folds=2):
     """Tune LightGBM hyperparameters with Optuna."""
 
     def objective(trial):
         params = {
-            'n_estimators': trial.suggest_int('n_estimators', 400, 1000),
-            'max_depth': trial.suggest_int('max_depth', 5, 12),
+            'n_estimators': trial.suggest_int('n_estimators', 120, 350),
+            'max_depth': trial.suggest_int('max_depth', 3, 8),
             'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.15, log=True),
             'num_leaves': trial.suggest_int('num_leaves', 31, 255),
             'min_child_samples': trial.suggest_int('min_child_samples', 10, 60),
@@ -82,13 +113,13 @@ def tune_lightgbm(X, y, n_trials=20, n_folds=3):
             'reg_lambda': trial.suggest_float('reg_lambda', 0.5, 3.0),
             'is_unbalance': True,
             'random_state': 42,
-            'n_jobs': -1,
+            'n_jobs': 4,
             'verbosity': -1,
         }
 
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+        splitter = TimeSeriesSplit(n_splits=n_folds)
         aucs = []
-        for train_idx, val_idx in skf.split(X, y):
+        for train_idx, val_idx in splitter.split(X):
             if hasattr(X, 'iloc'):
                 X_tr, X_val = X.iloc[train_idx], X.iloc[val_idx]
             else:
@@ -104,17 +135,23 @@ def tune_lightgbm(X, y, n_trials=20, n_folds=3):
         return np.mean(aucs)
 
     study = optuna.create_study(direction='maximize', study_name='lightgbm_tune')
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    study.optimize(
+        objective,
+        n_trials=n_trials,
+        callbacks=[_trial_progress_callback(n_trials)],
+        show_progress_bar=False,
+    )
 
     print(f"    -> Best LightGBM AUC: {study.best_value:.4f}")
     print(f"    -> Best params: {study.best_params}")
     return study.best_params
 
 
-def tune_catboost(X, y, n_trials=20, n_folds=3):
+def tune_catboost(X, y, n_trials=5, n_folds=2, use_gpu=False):
     """Tune CatBoost hyperparameters with Optuna."""
 
     def objective(trial):
+        nonlocal use_gpu
         params = {
             'iterations': trial.suggest_int('iterations', 200, 500),
             'depth': trial.suggest_int('depth', 4, 8),
@@ -125,11 +162,15 @@ def tune_catboost(X, y, n_trials=20, n_folds=3):
             'eval_metric': 'AUC',
             'random_seed': 42,
             'verbose': 0,
+            'thread_count': 4,
+            'allow_writing_files': False,
         }
+        if use_gpu:
+            params.update(task_type='GPU', devices='0', gpu_ram_part=0.25, boosting_type='Plain')
 
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+        splitter = TimeSeriesSplit(n_splits=n_folds)
         aucs = []
-        for train_idx, val_idx in skf.split(X, y):
+        for train_idx, val_idx in splitter.split(X):
             if hasattr(X, 'iloc'):
                 X_tr, X_val = X.iloc[train_idx], X.iloc[val_idx]
             else:
@@ -137,30 +178,45 @@ def tune_catboost(X, y, n_trials=20, n_folds=3):
             y_tr, y_val = y.iloc[train_idx], y.iloc[val_idx]
 
             model = CatBoostClassifier(**params)
-            model.fit(X_tr, y_tr, eval_set=(X_val, y_val), verbose=0)
+            try:
+                model.fit(X_tr, y_tr, eval_set=(X_val, y_val), verbose=0)
+            except Exception as exc:
+                message = str(exc).lower()
+                if not use_gpu or not any(word in message for word in ('cuda', 'gpu', 'memory', 'device')):
+                    raise
+                print(f"    [TUNE] CatBoost GPU fit failed ({exc}); continuing tuning on CPU.")
+                use_gpu = False
+                for key in ('task_type', 'devices', 'gpu_ram_part', 'boosting_type'):
+                    params.pop(key, None)
+                model = CatBoostClassifier(**params)
+                model.fit(X_tr, y_tr, eval_set=(X_val, y_val), verbose=0)
             preds = model.predict_proba(X_val)[:, 1]
             aucs.append(roc_auc_score(y_val, preds))
 
         return np.mean(aucs)
 
     study = optuna.create_study(direction='maximize', study_name='catboost_tune')
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    study.optimize(
+        objective,
+        n_trials=n_trials,
+        callbacks=[_trial_progress_callback(n_trials)],
+        show_progress_bar=False,
+    )
 
     print(f"    -> Best CatBoost AUC: {study.best_value:.4f}")
     print(f"    -> Best params: {study.best_params}")
     return study.best_params
 
 
-def run_tuning(X_train, y_train, output_dir, n_trials=15):
+def run_tuning(X_train, y_train, output_dir, n_trials=150, profile=None):
     """Run full Optuna tuning and save best parameters."""
     print("\n" + "=" * 70)
     print("OPTUNA HYPERPARAMETER TUNING")
     print("=" * 70)
 
-    # Sample for speed (tuning on full data is too slow)
-    rng = np.random.RandomState(42)
-    sample_size = min(150000, len(X_train))
-    sample_idx = rng.choice(len(X_train), sample_size, replace=False)
+    # Thin the ordered training period without shuffling its chronology.
+    sample_size = min(20000, len(X_train))
+    sample_idx = np.linspace(0, len(X_train) - 1, sample_size, dtype=int)
     if hasattr(X_train, 'iloc'):
         X_sample = X_train.iloc[sample_idx]
     else:
@@ -169,14 +225,23 @@ def run_tuning(X_train, y_train, output_dir, n_trials=15):
     print(f"  [TUNE] Using {sample_size:,} samples for tuning...")
 
     print(f"\n  [XGBoost] Tuning {n_trials} trials...")
-    xgb_params = tune_xgboost(X_sample, y_sample, n_trials=n_trials)
+    if profile is None:
+        from src.runtime_config import training_profile
+        profile = training_profile()
+    xgb_params = tune_xgboost(
+        X_sample, y_sample, n_trials=n_trials, n_folds=2,
+        use_gpu=bool(profile.get('xgb_gpu')),
+    )
 
     print(f"\n  [LightGBM] Tuning {n_trials} trials...")
-    lgb_params = tune_lightgbm(X_sample, y_sample, n_trials=n_trials)
+    lgb_params = tune_lightgbm(X_sample, y_sample, n_trials=n_trials, n_folds=2)
 
-    cat_trials = max(n_trials // 2, 20)  # CatBoost is slower, use fewer trials
+    cat_trials = n_trials
     print(f"\n  [CatBoost] Tuning {cat_trials} trials...")
-    cat_params = tune_catboost(X_sample, y_sample, n_trials=cat_trials)
+    cat_params = tune_catboost(
+        X_sample, y_sample, n_trials=cat_trials, n_folds=2,
+        use_gpu=bool(profile.get('catboost_gpu')),
+    )
 
     # Save best params
     best_params = {

@@ -1,28 +1,24 @@
-# FraudShield AI — Lightweight deployment (API + Landing + Mobile)
-# No GPU, no training — just the FastAPI serving layer
-FROM python:3.11-slim
+# CPU-only scoring image. Run main.py separately to train and export a bundle.
+FROM python:3.12-slim
 
 WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Minimal requirements for API deployment
-COPY requirements.deploy.txt .
+COPY requirements.deploy.txt ./requirements.deploy.txt
 RUN pip install --no-cache-dir -r requirements.deploy.txt
 
-# Copy only what's needed for the API
-COPY api.py .
-COPY landing/ landing/
-COPY mobile/ mobile/
-COPY outputs/ outputs/ 2>/dev/null || true
-COPY src/ src/ 2>/dev/null || true
+COPY api.py ./api.py
+COPY src/ ./src/
+COPY outputs/model_artifacts/ ./outputs/model_artifacts/
+COPY outputs/results/model_metrics.json ./outputs/results/model_metrics.json
 
-# Render uses PORT env variable
-ENV PORT=8000
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl --fail http://localhost:${PORT}/ready || exit 1
 
-EXPOSE ${PORT}
-
-HEALTHCHECK CMD curl --fail http://localhost:${PORT}/health || exit 1
-
-CMD uvicorn api:app --host 0.0.0.0 --port ${PORT}
+CMD ["sh", "-c", "uvicorn api:app --host 0.0.0.0 --port ${PORT}"]

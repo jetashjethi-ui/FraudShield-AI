@@ -1,24 +1,10 @@
-version: '3.8'
-
 services:
-  # Main Dashboard
-  dashboard:
-    build: .
-    ports:
-      - "8501:8501"
-    volumes:
-      - ./outputs:/app/outputs
-      - ./data:/app/data
-    environment:
-      - STREAMLIT_THEME_BASE=dark
-    restart: unless-stopped
-
-  # FastAPI Backend
   api:
-    build: .
-    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    build:
+      context: .
+      dockerfile: Dockerfile.deploy
     ports:
-      - "8000:8000"
-    volumes:
-      - ./outputs:/app/outputs
+      - "${PORT:-8000}:${PORT:-8000}"
+    environment:
+      PORT: ${PORT:-8000}
     restart: unless-stopped

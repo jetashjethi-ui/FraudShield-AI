@@ -2,9 +2,8 @@
 FraudShield AI — Adversarial Validation
 Tests whether train and test sets come from the same distribution.
 
-If a classifier can easily distinguish train from test (AUC >> 0.5), 
-the model may be overfitting to train-specific patterns.
-AUC ~0.5 = good (distributions match, model generalizes).
+If a classifier can distinguish train from the later holdout (AUC >> 0.5),
+feature distributions have shifted. This is not a test for label leakage.
 """
 
 import numpy as np
@@ -14,33 +13,65 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 
 
-def run_adversarial_validation(X_train, X_test, output_dir, n_splits=3):
+def run_adversarial_validation(X_train, X_test, output_dir, n_splits=3, sample_per_period=20000):
     """
     Train a LightGBM classifier to distinguish train from test.
-    AUC close to 0.5 means no data leakage / distribution mismatch.
+    AUC near 0.5 means the feature distributions are hard to distinguish.
+    It cannot establish that labels or features are leakage-free.
     """
     print("\n[Adversarial Validation] Checking train/test distribution match...")
 
     n_train = len(X_train)
     n_test = len(X_test)
+    feature_names = list(X_train.columns) if hasattr(X_train, "columns") else [f"feature_{i}" for i in range(X_train.shape[1])]
+    original_n_train, original_n_test = n_train, n_test
 
-    # Convert to numpy if needed
-    if hasattr(X_train, 'values'):
-        X_train_np = X_train.values
-    else:
-        X_train_np = np.array(X_train)
+    # Sample each period before concatenation. Building a full train+holdout
+    # matrix duplicated more than a GB on the full IEEE-CIS feature table.
+    rng = np.random.RandomState(42)
+    n_train_sample = min(n_train, sample_per_period)
+    n_test_sample = min(n_test, sample_per_period)
+    train_idx = np.linspace(0, n_train - 1, n_train_sample, dtype=int)
+    test_idx = np.linspace(0, n_test - 1, n_test_sample, dtype=int)
+    X_train_np = X_train.iloc[train_idx].to_numpy(dtype=np.float32, copy=False) if hasattr(X_train, 'iloc') else np.asarray(X_train, dtype=np.float32)[train_idx]
+    X_test_np = X_test.iloc[test_idx].to_numpy(dtype=np.float32, copy=False) if hasattr(X_test, 'iloc') else np.asarray(X_test, dtype=np.float32)[test_idx]
 
-    if hasattr(X_test, 'values'):
-        X_test_np = X_test.values
-    else:
-        X_test_np = np.array(X_test)
+    # Per-feature population stability index complements the global
+    # adversarial AUC and makes the drift report actionable by field name.
+    psi_by_feature = {}
+    quantiles = np.linspace(0.0, 1.0, 11)
+    for column_index, feature_name in enumerate(feature_names):
+        train_values = X_train_np[:, column_index]
+        test_values = X_test_np[:, column_index]
+        train_values = train_values[np.isfinite(train_values)]
+        test_values = test_values[np.isfinite(test_values)]
+        if not len(train_values) or not len(test_values):
+            psi_by_feature[feature_name] = 0.0
+            continue
+        edges = np.unique(np.quantile(train_values, quantiles))
+        if len(edges) < 2:
+            baseline = train_values[0]
+            train_counts = np.array([np.sum(train_values == baseline), np.sum(train_values != baseline)], dtype=float)
+            test_counts = np.array([np.sum(test_values == baseline), np.sum(test_values != baseline)], dtype=float)
+        else:
+            internal_edges = edges[1:-1]
+            if len(internal_edges) == 0:
+                internal_edges = np.array([(edges[0] + edges[-1]) / 2.0])
+            bins = np.concatenate(([-np.inf], internal_edges, [np.inf]))
+            train_counts = np.histogram(train_values, bins=bins)[0].astype(float)
+            test_counts = np.histogram(test_values, bins=bins)[0].astype(float)
+        epsilon = 1.0 / max(len(train_values), len(test_values), 1)
+        train_share = np.clip(train_counts / max(train_counts.sum(), 1.0), epsilon, None)
+        test_share = np.clip(test_counts / max(test_counts.sum(), 1.0), epsilon, None)
+        psi_by_feature[feature_name] = float(np.sum((test_share - train_share) * np.log(test_share / train_share)))
 
     # Create adversarial labels: 0 = train, 1 = test
-    X_all = np.vstack([X_train_np, X_test_np])
-    y_adv = np.concatenate([np.zeros(n_train), np.ones(n_test)])
+    n_train, n_test = n_train_sample, n_test_sample
+    X_all = np.vstack([X_train_np, X_test_np]).astype(np.float32, copy=False)
+    del X_train_np, X_test_np
+    y_adv = np.concatenate([np.zeros(n_train, dtype=np.int8), np.ones(n_test, dtype=np.int8)])
 
     # Shuffle
-    rng = np.random.RandomState(42)
     idx = rng.permutation(len(X_all))
     X_all = X_all[idx]
     y_adv = y_adv[idx]
@@ -67,7 +98,7 @@ def run_adversarial_validation(X_train, X_test, output_dir, n_splits=3):
             model = lgb.LGBMClassifier(
                 n_estimators=100, max_depth=4, learning_rate=0.1,
                 subsample=0.7, colsample_bytree=0.7,
-                verbose=-1, n_jobs=-1
+                verbose=-1, n_jobs=4
             )
             model.fit(Xt, yt, eval_set=[(Xv, yv)])
         else:
@@ -84,18 +115,18 @@ def run_adversarial_validation(X_train, X_test, output_dir, n_splits=3):
     # Interpretation
     if mean_auc < 0.55:
         status = "EXCELLENT"
-        interpretation = "Train and test distributions are nearly identical. No data leakage detected."
+        interpretation = "No strong train/holdout feature shift detected. This does not test label leakage."
     elif mean_auc < 0.65:
         status = "GOOD"
-        interpretation = "Minor distribution differences exist but are acceptable."
+        interpretation = "Minor train/holdout feature shift detected; inspect affected features."
     elif mean_auc < 0.75:
         status = "WARNING"
-        interpretation = "Moderate distribution mismatch. Review feature engineering for leakage."
+        interpretation = "Moderate train/holdout feature shift detected; inspect drift and split design."
     else:
         status = "CRITICAL"
-        interpretation = "Severe distribution mismatch. High risk of overfitting."
+        interpretation = "Severe train/holdout feature shift detected; reported metrics may not transfer."
 
-    passed = mean_auc < 0.65
+    passed = bool(mean_auc < 0.65)
 
     result = {
         'adversarial_auc': round(float(mean_auc), 4),
@@ -103,16 +134,25 @@ def run_adversarial_validation(X_train, X_test, output_dir, n_splits=3):
         'status': status,
         'passed': passed,
         'interpretation': interpretation,
-        'n_train': n_train,
-        'n_test': n_test,
+        'n_train': original_n_train,
+        'n_test': original_n_test,
+        'sampled_n_train': n_train,
+        'sampled_n_test': n_test,
+        'feature_psi': psi_by_feature,
     }
 
-    # Feature importance (which features leak most)
+    # Feature importance (which features most distinguish the split)
     if use_lgb and hasattr(model, 'feature_importances_'):
         importances = model.feature_importances_
         top_leak = sorted(range(len(importances)), key=lambda i: importances[i], reverse=True)[:10]
-        result['top_leaking_features'] = [
-            {'index': int(i), 'importance': int(importances[i])} for i in top_leak
+        result['top_shift_features'] = [
+            {
+                'index': int(i),
+                'name': feature_names[i],
+                'importance': int(importances[i]),
+                'psi': float(psi_by_feature.get(feature_names[i], 0.0)),
+            }
+            for i in top_leak
         ]
 
     # Save

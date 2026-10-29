@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-10-28T20:07:06.020665+00:00",
+  "duration_seconds": 1157.02,
+  "python_version": "3.12.13",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0",
+    "catboost": "1.2.10",
+    "imbalanced-learn": "0.14.2",
+    "optuna": "5.0.0"
+  },
+  "dataset": {
+    "name": "IEEE-CIS Fraud Detection",
+    "total_rows": 590540,
+    "train_rows": 472432,
+    "chronological_holdout_rows": 118108,
+    "train_fraud_rate": 0.03513521522674162,
+    "holdout_fraud_rate": 0.034409184813899145,
+    "split_fraction": 0.8
+  },
+  "features": {
+    "count": 153,
+    "history_features": 6,
+    "initial_warmup_rows_for_selection_and_tuning": 126777,
+    "high_missing_columns_dropped": 205,
+    "low_importance_features_dropped": 521
+  },
+  "imbalance_handling": {
+    "smote_models": [
+      "xgboost",
+      "mlp"
+    ],
+    "native_class_weight_models": [
+      "lightgbm",
+      "catboost",
+      "random_forest"
+    ]
+  },
+  "runtime": {
+    "available_ram_gb": 9.18,
+    "gpu_free_gb": 6.83,
+    "use_gpu": true,
+    "xgb_gpu": true,
+    "catboost_gpu": true,
+    "n_jobs": 4
+  },
+  "decision_policy_cost_weights": {
+    "cost_fn": 850.0,
+    "cost_fp": 25.0,
+    "cost_review": 15.0
+  },
+  "model_metrics_file": "model_metrics.json",
+  "model_bundle_dir": "../model_artifacts"
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 4,
+  "base_models": [
+    "xgboost",
+    "lightgbm",
+    "catboost",
+    "random_forest",
+    "mlp"
+  ],
+  "feature_count": 153
+}

@@ -12,6 +12,7 @@ def optimize_threshold(y_true, y_probs,
                        cost_fn=850,   # Cost of missed fraud (false negative)
                        cost_fp=25,    # Cost of false positive (customer friction)
                        cost_review=15,# Cost of manual review
+                       annual_transactions=None,
                        n_thresholds=1000):
     """
     Find the threshold that minimizes total business cost.
@@ -26,6 +27,8 @@ def optimize_threshold(y_true, y_probs,
     
     y_true = np.array(y_true)
     y_probs = np.array(y_probs)
+    if any(not np.isfinite(value) or value < 0 for value in (cost_fn, cost_fp, cost_review)):
+        raise ValueError("Cost weights must be finite, non-negative values.")
     
     for t in thresholds:
         y_pred = (y_probs >= t).astype(int)
@@ -59,35 +62,39 @@ def optimize_threshold(y_true, y_probs,
     default_idx = min(range(len(results)), key=lambda i: abs(results[i]['threshold'] - 0.5))
     optimal_idx = min(range(len(results)), key=lambda i: abs(results[i]['threshold'] - best_threshold))
     
-    # Annual projection (50M transactions)
-    annual_txns = 50_000_000
-    scale = annual_txns / max(len(y_true), 1)
-    
-    default_annual = results[default_idx]['cost'] * scale
-    optimal_annual = results[optimal_idx]['cost'] * scale
-    annual_savings = default_annual - optimal_annual
-    
     output = {
         'optimal_threshold': round(float(best_threshold), 4),
         'default_threshold': 0.5,
         'cost_at_optimal': round(float(best_cost), 2),
         'cost_at_default': round(float(results[default_idx]['cost']), 2),
         'savings_vs_default': round(float(results[default_idx]['cost'] - best_cost), 2),
-        'annual_savings_projected': f"₹{annual_savings:,.0f}",
+        'annual_projection': None,
         'optimal_metrics': results[optimal_idx],
         'default_metrics': results[default_idx],
         'cost_matrix': {
             'false_negative_cost': cost_fn,
             'false_positive_cost': cost_fp,
             'review_cost': cost_review,
+            'currency': None,
+            'note': 'Illustrative cost units; configure these weights for a real operating context.',
         },
         'threshold_curve': results[::max(1, len(results)//100)],  # Sample 100 points for plotting
     }
+
+    if annual_transactions is not None:
+        scale = max(int(annual_transactions), 0) / max(len(y_true), 1)
+        output['annual_projection'] = {
+            'transactions': int(annual_transactions),
+            'default_cost_units': round(float(results[default_idx]['cost'] * scale), 2),
+            'selected_cost_units': round(float(best_cost * scale), 2),
+            'savings_cost_units': round(float((results[default_idx]['cost'] - best_cost) * scale), 2),
+            'currency': None,
+        }
     
     return output
 
 
-def run_threshold_optimization(results_dir):
+def run_threshold_optimization(results_dir, *, cost_fn=850, cost_fp=25, cost_review=15):
     """Load OOF predictions and run optimization."""
     
     oof_path = os.path.join(results_dir, 'oof_predictions.json')
@@ -106,7 +113,12 @@ def run_threshold_optimization(results_dir):
         return None
     
     print(f"[Threshold] Running cost-sensitive optimization on {len(y_true)} predictions...")
-    result = optimize_threshold(y_true, y_probs)
+    result = optimize_threshold(
+        y_true, y_probs,
+        cost_fn=cost_fn,
+        cost_fp=cost_fp,
+        cost_review=cost_review,
+    )
     
     # Save results
     out_path = os.path.join(results_dir, 'threshold_optimization.json')
@@ -114,7 +126,7 @@ def run_threshold_optimization(results_dir):
         json.dump(result, f, indent=2)
     
     print(f"[Threshold] Optimal threshold: {result['optimal_threshold']:.4f} (vs default 0.5)")
-    print(f"[Threshold] Cost savings: {result['savings_vs_default']:.2f}")
-    print(f"[Threshold] Projected annual savings: {result['annual_savings_projected']}")
+    print(f"[Threshold] Reduction in illustrative cost units: {result['savings_vs_default']:.2f}")
+    print("[Threshold] Annual projection omitted; no business volume or currency was supplied.")
     
     return result

@@ -1,8 +1,16 @@
 {
-  "coverage_target": 0.95,
-  "quantile_threshold": 0.0174,
-  "certain_fraud": 9336,
-  "certain_legit": 116262,
-  "uncertain_review": -7490,
-  "empirical_coverage": 0.921
+  "calibration": {
+    "brier_after": 0.022484874565971157,
+    "auc_calibrated": 0.9126625210203438
+  },
+  "conformal": {
+    "alpha": 0.05,
+    "coverage_target": 0.95,
+    "empirical_test_coverage": 0.9735665661936532,
+    "threshold": 0.17953667953667954,
+    "certain_fraud_pct": 0.016882852982016458,
+    "certain_legit_pct": 0.9831171470179836,
+    "uncertain_pct": 0.0,
+    "avg_confidence": 0.9691238589949502
+  }
 }

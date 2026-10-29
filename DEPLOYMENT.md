@@ -1,64 +1,28 @@
-# FraudShield AI — Deployment Guide
+# API deployment
 
-## 🚀 Quick Deploy
+The repository includes a schema-versioned inference bundle in `outputs/model_artifacts/` and the dashboard metrics file in `outputs/results/model_metrics.json`. A clean checkout can build and run the demo API without the IEEE-CIS training data.
 
-### Option 1: Render.com (API + Landing + Mobile)
+## Build and run with Docker
 
-1. Push code to GitHub
-2. Go to [render.com](https://render.com) → New → Web Service
-3. Connect your GitHub repo
-4. Render auto-detects `render.yaml` — click **Deploy**
-5. Your live URL: `https://fraudshield-ai.onrender.com`
+From the repository root:
 
-**What you get:**
-- Landing page at `/`
-- Mobile PWA at `/mobile/`
-- Swagger API docs at `/docs`
-- WebSocket feed at `/ws/feed`
-- Health check at `/health`
-
----
-
-### Option 2: Streamlit Cloud (Dashboard)
-
-1. Go to [share.streamlit.io](https://share.streamlit.io)
-2. Click **New app** → Connect GitHub repo
-3. Set main file path: `dashboard.py`
-4. Click **Deploy**
-
-**What you get:**
-- Full 17-page dashboard at `https://your-app.streamlit.app`
-
----
-
-### Option 3: Docker (Local / VPS)
-
-```bash
-# Full stack (dashboard + API)
-docker-compose up
-
-# API only (lightweight)
-docker build -f Dockerfile.deploy -t fraudshield-api .
-docker run -p 8000:8000 fraudshield-api
+```powershell
+docker build -f Dockerfile.deploy -t fraudshield-ai-api .
+docker run --rm -p 8000:8000 fraudshield-ai-api
 ```
 
----
+Open `/health` for process liveness, `/ready` for model readiness, and `/docs` for the interactive API reference. The container health check uses `/ready` and reports unhealthy if the included model bundle cannot be loaded.
 
-## 🔗 URLs After Deployment
+The image is CPU-only and serves the committed bundle; it does not train models. To deploy a newly trained bundle, run the pipeline in `main.py` with the required IEEE-CIS files in `data/`, then rebuild the image. Do not mix artifacts from different schema versions.
 
-| Service | Local | Render | Streamlit Cloud |
-|---------|-------|--------|-----------------|
-| Landing | localhost:8000 | fraudshield-ai.onrender.com | — |
-| Mobile | localhost:8000/mobile/ | fraudshield-ai.onrender.com/mobile/ | — |
-| API Docs | localhost:8000/docs | fraudshield-ai.onrender.com/docs | — |
-| Dashboard | localhost:8501 | — | your-app.streamlit.app |
-| WebSocket | ws://localhost:8000/ws/feed | wss://fraudshield-ai.onrender.com/ws/feed | — |
+## Configuration and limits
 
----
+- Set `CORS_ORIGINS` to exact trusted origins when browser clients need direct API access.
+- Set `FRAUDSHIELD_API_KEY` to require `X-API-Key` on protected scoring routes.
+- Keep secrets out of the dashboard's client-side code. Use TLS at any public deployment edge.
+- Request history is held in memory per API process. Use one process for the demo; multi-worker or multi-replica scoring needs shared history storage.
+- This is a research/demo tool, not production banking software. Scores never block real payments.
 
-## ⚠️ Notes
+The included pickled artifacts should only be loaded from a trusted source. Use the pinned serving dependencies in `requirements.deploy.txt` and Python 3.12 for compatibility.
 
-- **Render free tier** spins down after 15 min of inactivity. First request after sleep takes ~30s.
-- **Streamlit Cloud** is always-on for public repos.
-- Model artifacts (`.pkl`, `.json`) in `outputs/` are loaded if present, otherwise mock scoring is used.
-- GPU is NOT needed for deployment — only for training (`python main.py`).
+`render.yaml` contains the optional Render Docker service configuration. Set deployment secrets in the hosting provider's environment settings; do not commit them.

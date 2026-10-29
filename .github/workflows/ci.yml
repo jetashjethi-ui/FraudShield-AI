@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
     timeout-minutes: 10
 
     steps:
@@ -33,15 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest httpx
-          pip install numpy pandas scikit-learn
-          pip install fastapi uvicorn pydantic
-          pip install xgboost lightgbm catboost
-          pip install streamlit plotly shap optuna joblib
-          pip install networkx scipy
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install pytorch-tabnet
-          pip install fpdf2
+          pip install -r requirements-dev.txt
 
       - name: Syntax check
         run: |

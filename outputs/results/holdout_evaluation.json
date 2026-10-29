@@ -1,0 +1,221 @@
+{
+  "evaluation_split": "final chronological 20% holdout; not used for fitting, tuning, calibration, or threshold selection",
+  "rows": 118108,
+  "fraud_rate": 0.034409184813899145,
+  "models": {
+    "catboost": {
+      "rows": 118108,
+      "fraud_rate": 0.034409184813899145,
+      "roc_auc": 0.9145442154941164,
+      "average_precision": 0.5078852063043499,
+      "brier_score": 0.07229534886433225,
+      "log_loss": 0.25648768264219113,
+      "threshold": 0.5,
+      "precision": 0.23852990631755946,
+      "recall": 0.7330216535433071,
+      "f1": 0.35993475502929984,
+      "confusion_matrix": [
+        [
+          104534,
+          9510
+        ],
+        [
+          1085,
+          2979
+        ]
+      ],
+      "review_budgets": {
+        "top_1pct": {
+          "reviewed": 1182,
+          "fraud_found": 1008,
+          "precision_at_capacity": 0.8527918781725888,
+          "recall_at_capacity": 0.24803149606299213
+        },
+        "top_2pct": {
+          "reviewed": 2363,
+          "fraud_found": 1575,
+          "precision_at_capacity": 0.6665256030469742,
+          "recall_at_capacity": 0.3875492125984252
+        },
+        "top_5pct": {
+          "reviewed": 5906,
+          "fraud_found": 2341,
+          "precision_at_capacity": 0.39637656620386047,
+          "recall_at_capacity": 0.5760334645669292
+        }
+      },
+      "confidence_intervals": {
+        "method": "stratified percentile bootstrap",
+        "replicates": 200,
+        "intervals": {
+          "roc_auc": {
+            "lower_95": 0.9102821993460805,
+            "upper_95": 0.9189741595905828
+          },
+          "average_precision": {
+            "lower_95": 0.4933048724992817,
+            "upper_95": 0.5242331977823445
+          },
+          "brier_score": {
+            "lower_95": 0.07154265563353121,
+            "upper_95": 0.07307753235258305
+          }
+        }
+      }
+    },
+    "ensemble": {
+      "rows": 118108,
+      "fraud_rate": 0.034409184813899145,
+      "roc_auc": 0.9126625210203438,
+      "average_precision": 0.4920787745907627,
+      "brier_score": 0.022484874565971202,
+      "log_loss": 0.09053265225784266,
+      "threshold": 0.059,
+      "precision": 0.17601706036745407,
+      "recall": 0.7920767716535433,
+      "f1": 0.28802791696492486,
+      "confusion_matrix": [
+        [
+          98975,
+          15069
+        ],
+        [
+          845,
+          3219
+        ]
+      ],
+      "review_budgets": {
+        "top_1pct": {
+          "reviewed": 1182,
+          "fraud_found": 948,
+          "precision_at_capacity": 0.8020304568527918,
+          "recall_at_capacity": 0.23326771653543307
+        },
+        "top_2pct": {
+          "reviewed": 2363,
+          "fraud_found": 1602,
+          "precision_at_capacity": 0.6779517562420652,
+          "recall_at_capacity": 0.3941929133858268
+        },
+        "top_5pct": {
+          "reviewed": 5906,
+          "fraud_found": 2396,
+          "precision_at_capacity": 0.4056891296986116,
+          "recall_at_capacity": 0.5895669291338582
+        }
+      },
+      "confidence_intervals": {
+        "method": "stratified percentile bootstrap",
+        "replicates": 200,
+        "intervals": {
+          "roc_auc": {
+            "lower_95": 0.9074875600684202,
+            "upper_95": 0.9175685070825942
+          },
+          "average_precision": {
+            "lower_95": 0.47739280055481376,
+            "upper_95": 0.5072741680237275
+          },
+          "brier_score": {
+            "lower_95": 0.0220136237534655,
+            "upper_95": 0.022910880098929016
+          }
+        }
+      }
+    }
+  },
+  "chronological_segments": {
+    "catboost": [
+      {
+        "rows": 29527,
+        "fraud_rate": 0.033223829037829784,
+        "roc_auc": 0.9123643488168282,
+        "average_precision": 0.4813167348293651,
+        "brier_score": 0.07054901110728878,
+        "log_loss": 0.25276241767801916,
+        "segment": 1,
+        "transaction_time_start": 12192900.0,
+        "transaction_time_end": 13151840.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.029464557862295526,
+        "roc_auc": 0.9168146917224291,
+        "average_precision": 0.5124658231392033,
+        "brier_score": 0.06972810532782889,
+        "log_loss": 0.24837986315876256,
+        "segment": 2,
+        "transaction_time_start": 13151880.0,
+        "transaction_time_end": 13990904.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.03535746943475463,
+        "roc_auc": 0.9101982657397442,
+        "average_precision": 0.4994403381352086,
+        "brier_score": 0.07507881449386491,
+        "log_loss": 0.2637857533919196,
+        "segment": 3,
+        "transaction_time_start": 13990941.0,
+        "transaction_time_end": 14857872.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.03959088292071663,
+        "roc_auc": 0.9181706207646569,
+        "average_precision": 0.5330362105860661,
+        "brier_score": 0.0738254645283465,
+        "log_loss": 0.26102269634006314,
+        "segment": 4,
+        "transaction_time_start": 14857875.0,
+        "transaction_time_end": 15811131.0
+      }
+    ],
+    "ensemble": [
+      {
+        "rows": 29527,
+        "fraud_rate": 0.033223829037829784,
+        "roc_auc": 0.9126372063389219,
+        "average_precision": 0.46320612856015586,
+        "brier_score": 0.022580492125944235,
+        "log_loss": 0.08990560825973525,
+        "segment": 1,
+        "transaction_time_start": 12192900.0,
+        "transaction_time_end": 13151840.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.029464557862295526,
+        "roc_auc": 0.9161098028645587,
+        "average_precision": 0.501391412064069,
+        "brier_score": 0.019282845462267703,
+        "log_loss": 0.07931570193694518,
+        "segment": 2,
+        "transaction_time_start": 13151880.0,
+        "transaction_time_end": 13990904.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.03535746943475463,
+        "roc_auc": 0.9033093007148313,
+        "average_precision": 0.4752391700694171,
+        "brier_score": 0.023724438516263477,
+        "log_loss": 0.09593928382823647,
+        "segment": 3,
+        "transaction_time_start": 13990941.0,
+        "transaction_time_end": 14857872.0
+      },
+      {
+        "rows": 29527,
+        "fraud_rate": 0.03959088292071663,
+        "roc_auc": 0.9177760113557254,
+        "average_precision": 0.5258502821220632,
+        "brier_score": 0.024351722159409388,
+        "log_loss": 0.09697001500645372,
+        "segment": 4,
+        "transaction_time_start": 14857875.0,
+        "transaction_time_end": 15811131.0
+      }
+    ]
+  }
+}

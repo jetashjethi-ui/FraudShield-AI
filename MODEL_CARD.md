@@ -1,91 +1,39 @@
-# FraudShield AI — Model Card
+# FraudShield AI Model Card
 
-**Version:** 3.0 | **Last Updated:** April 2026
+## Summary
 
----
+FraudShield AI is a portfolio research backend for binary transaction-fraud ranking and review prioritization. It is not validated for production banking decisions, regulatory compliance, or use as the sole basis for blocking customers.
 
-## Model Details
+## Data and evaluation
 
-| Field | Value |
-|-------|-------|
-| **Architecture** | Dual Stacking Ensemble (8 Base Models) |
-| **Meta-Learner** | XGBoost + Rank-Weighted Blend (auto-selects best) |
-| **Training Data** | IEEE-CIS Fraud Detection (~590K transactions) |
-| **Cross-Validation** | 7-Fold Stratified |
-| **Hyperparameter Tuning** | 150 Optuna trials per model |
-| **Uncertainty Quantification** | Conformal Prediction (95% coverage) |
-| **Probability Calibration** | Isotonic Regression |
+- Dataset: IEEE-CIS Fraud Detection, 590,540 labeled transactions.
+- Rows are ordered by `TransactionDT`; the oldest 80% is used for training and the newest 20% is held out once for final evaluation.
+- The training period contains 472,432 rows; the final holdout contains 118,108 rows with 3.44% fraud prevalence.
+- Feature generation excludes labels and uses only earlier transactions for seven-day card and card/address history features.
+- Feature selection and tuning use an initial training-period warm-up. The final holdout is not used for fraud-model fitting, calibration, threshold selection, or model selection.
+- Three shared forward-in-time windows compare the stack and CatBoost. The stack had a slightly higher mean average precision across those windows (0.5459 vs. 0.5439) and better mean ROC-AUC; the holdout remains a one-period evaluation.
 
-## Intended Use
+## Model and serving
 
-- **Primary:** Real-time credit/debit card fraud detection for financial institutions
-- **Secondary:** Transaction monitoring, suspicious activity reporting (SAR), regulatory compliance
-- **Not Intended For:** Credit scoring, identity verification, or standalone legal decision-making
+The served model stacks XGBoost, LightGBM, CatBoost, Random Forest, and MLP probabilities with an XGBoost meta-model. An isotonic calibrator is fitted on an earlier out-of-time training segment; the decision threshold is selected on a later training segment using illustrative cost weights. SMOTE is limited to XGBoost and MLP; LightGBM, CatBoost, and Random Forest use native class weighting. Isolation Forest and an autoencoder are reported as separate research baselines and are not part of the served score.
 
-## Performance
+Training and API scoring share the same feature pipeline. Prior-seven-day histories are maintained for card and card/address entities. API history is in process memory, so multi-worker or multi-replica serving needs a shared event store.
 
-| Metric | Value |
-|--------|-------|
-| AUC-ROC (XGBoost) | **0.9776** |
-| AUC-ROC (Ensemble) | **0.9763** |
-| Ensemble F1 | 0.765 |
-| Ensemble Precision | 0.834 |
-| Ensemble Recall | 0.707 |
-| Cross-Validation | 7-Fold with Optuna HPO (150 trials) |
-| Detection Layers | 25 engineered feature groups |
-| Inference Latency | <50ms per transaction |
-| Threshold | Cost-optimized at 0.015 (FN=₹850, FP=₹25) |
-| Adversarial Validation | AUC 0.5004 (EXCELLENT — no data leakage) |
+## Latest holdout results
 
-## Feature Groups (25 Layers)
+| Candidate | ROC-AUC | Average precision | Brier score | Log loss |
+|---|---:|---:|---:|---:|
+| Served stack | 0.9142 | 0.4883 | 0.0225 | 0.0902 |
+| CatBoost standalone | 0.9145 | 0.5079 | 0.0723 | 0.2565 |
 
-1. Amount Analysis | 2. Temporal Patterns | 3. Card Fingerprinting | 4. Address Intelligence
-5. Email Domain Risk | 6. Device Forensics | 7. Velocity Engine | 8. Merchant Risk
-9. Behavioral DNA | 10. SIM Swap Detection | 11. Seasonal Baselines | 12. Adaptive Auth
-13. Mule Network | 14. Dormant Account Hijack | 15. Round Amount Anomaly | 16. Category Mismatch
-17. New Account Risk | 18. Graph Analysis | 19. UID Profiling | 20. Target Encoding
-21. V-Feature PCA | 22. Frequency Encoding | 23. Peer-Group Deviation | 24. Transaction Entropy
-25. Cross-Feature Fraud Rates
+The served stack's 95% stratified-bootstrap intervals are **0.9090–0.9190** for ROC-AUC and **0.4735–0.5026** for average precision. CatBoost's corresponding intervals are **0.9103–0.9190** and **0.4933–0.5242**. The average-precision intervals overlap; these one-run results do not establish a meaningful ranking difference. CatBoost's raw probabilities are less calibrated, while the served stack has lower Brier score and log loss.
 
-## Ethical Considerations
+At the training-selected stack threshold of 0.059, holdout precision is 0.1995, recall is 0.7805, and F1 is 0.3178. This threshold reflects illustrative false-negative, false-positive, and review-cost weights; it is not a real institution's operating policy. Holdout average precision is about 14 times the 3.44% prevalence baseline.
 
-### Bias & Fairness
-- **Fairness audit** is built into the dashboard to detect bias across card types, product categories, and demographics
-- Model does not use protected attributes (race, gender, age) as direct features
-- Peer-group deviation features are computed per-card, not per-demographic
+Across four consecutive holdout segments, stack ROC-AUC ranges from 0.9066 to 0.9195. The train-versus-holdout adversarial classifier reaches AUC 0.7895 and remains flagged **CRITICAL** for feature shift. Its leading signals include `D15`, `D10`, and `D11`; this is evidence that future-period transfer remains uncertain. Named feature PSI values are recorded in `outputs/results/adversarial_validation.json`.
 
-### Transparency
-- **SHAP** TreeExplainer provides global and local feature importance
-- **LIME** generates plain-English explanations for each decision
-- **Counterfactual analysis** explains what would need to change to flip a decision
-- All decisions are auditable via scored transaction logs
+## Limits and intended use
 
-### Right to Explanation (GDPR Art. 22)
-- Every fraud decision includes a human-readable explanation
-- Customers can request detailed reasoning for any flagged transaction
-- Conformal prediction identifies "uncertain" cases for mandatory human review
+Use for experimentation, coursework, and portfolio demonstration. The dataset represents historical US e-commerce activity, and results may not transfer to other products, regions, or current fraud patterns. Validate on additional later periods, monitor drift, review fairness, and set thresholds from real operating costs before any deployment decision.
 
-### Limitations
-- Trained on US e-commerce data; may need recalibration for other regions
-- Performance may degrade on transaction patterns not represented in training data
-- Adversarial attacks specifically designed to evade this model have not been fully tested
-- Model assumes stationary fraud patterns; concept drift requires periodic retraining
-
-## Monitoring & Maintenance
-
-- **Drift detection** tracks feature distribution shifts and AUC degradation
-- **Retraining triggers:** AUC drops below 0.97 → warning; below 0.95 → critical
-- **Adversarial testing** included for noise injection robustness validation
-
-## Regulatory Compliance
-
-| Regulation | Status | Implementation |
-|------------|--------|---------------|
-| PCI-DSS | ✅ Compliant | No raw card data stored |
-| RBI Framework | ✅ Aligned | 4-tier risk scoring |
-| GDPR Art. 22 | ✅ Enabled | LIME explanations |
-| EU AI Act | ✅ Ready | Conformal prediction |
-
----
-
-*This model card follows the format proposed by Mitchell et al. (2019) — "Model Cards for Model Reporting."*
+The latest local run metadata is in `outputs/results/training_run.json`; holdout metrics and intervals are in `outputs/results/holdout_evaluation.json`; shared-window comparisons are in `outputs/results/temporal_cv_metrics.json`. Model binaries and raw data are excluded from Git, so a clean clone must train a fresh compatible bundle before serving.
