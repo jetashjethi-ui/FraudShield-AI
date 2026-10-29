@@ -4,6 +4,16 @@ FraudShield AI is a research and demo project for exploring transaction-risk sco
 
 > **Research/demo only.** This project is not production banking software. Scores are for demonstration and analysis; they never block real payments.
 
+## Live demo
+
+- **Dashboard:** [fraud-shield-ai-two.vercel.app](https://fraud-shield-ai-two.vercel.app/)
+- **API service:** [fraudshield-ai-ocjx.onrender.com](https://fraudshield-ai-ocjx.onrender.com/)
+- **Interactive API docs:** [Render `/docs`](https://fraudshield-ai-ocjx.onrender.com/docs)
+- **API health:** [Render `/health`](https://fraudshield-ai-ocjx.onrender.com/health) · [Render `/ready`](https://fraudshield-ai-ocjx.onrender.com/ready)
+- **Dashboard-to-API check:** [Vercel backend health](https://fraud-shield-ai-two.vercel.app/api/backend/health)
+
+The dashboard sends API requests through its server-side proxy. Render uses a free instance that can sleep when idle; its first request after inactivity may take 50 seconds or more. If the dashboard reports a timeout during wake-up, wait briefly and refresh.
+
 ## What is included
 
 - **Overview:** live service and model status, plus saved evaluation summaries.

@@ -1,4 +1,23 @@
-# API deployment
+# Deployment guide
+
+## Hosted demo
+
+- Dashboard: [https://fraud-shield-ai-two.vercel.app/](https://fraud-shield-ai-two.vercel.app/)
+- FastAPI service: [https://fraudshield-ai-ocjx.onrender.com/](https://fraudshield-ai-ocjx.onrender.com/)
+- API docs: [https://fraudshield-ai-ocjx.onrender.com/docs](https://fraudshield-ai-ocjx.onrender.com/docs)
+- Readiness: [https://fraudshield-ai-ocjx.onrender.com/ready](https://fraudshield-ai-ocjx.onrender.com/ready)
+
+The frontend and API are separate deployments. Vercel hosts the dashboard from the `frontend/` directory. Render hosts the Dockerized FastAPI service from the repository's `render.yaml` blueprint and `Dockerfile.deploy`.
+
+### Vercel environment variables
+
+Set `FRAUDSHIELD_API_BASE_URL` to `https://fraudshield-ai-ocjx.onrender.com` in the Vercel project's **Production** environment. Also set it for **Preview** if preview deployments should use the hosted API. These are server-only variables; do not add a `NEXT_PUBLIC_` prefix. Redeploy Vercel after changing environment variables.
+
+`FRAUDSHIELD_API_KEY` is optional. If API-key protection is enabled, set the same value in Vercel and Render. The frontend proxy sends it only with protected scoring requests.
+
+Render's free service may spin down when idle. Its first request after inactivity can take 50 seconds or more, so the dashboard may show one timeout while Render wakes. Refresh after the service has had time to start.
+
+## API deployment
 
 The repository includes a schema-versioned inference bundle in `outputs/model_artifacts/` and the dashboard metrics file in `outputs/results/model_metrics.json`. A clean checkout can build and run the demo API without the IEEE-CIS training data.
 
