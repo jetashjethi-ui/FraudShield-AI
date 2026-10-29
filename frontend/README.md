@@ -1,6 +1,6 @@
 # FraudShield AI dashboard
 
-The dashboard is the web interface for the FraudShield AI FastAPI service. It includes an animated Three.js landing experience, responsive overview, single and CSV batch scoring, performance and ROI views, and a system-status page. Reduced-motion preferences are respected.
+The dashboard is the web interface for the FraudShield AI FastAPI service. Its static HTML/CSS/JavaScript page is served at `/`; Next.js provides the same-origin server-side API proxy. It includes an animated Three.js landing experience, responsive overview, single and CSV batch scoring, performance and ROI views, and a system-status page. Reduced-motion preferences are respected.
 
 ## Start locally
 

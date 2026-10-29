@@ -23,7 +23,7 @@ export function initOverview(root) {
     let serviceNote = 'Derived from GET /health.';
     if (state === 'degraded') {
       serviceNote =
-        'The API is reachable but reports no loaded models. In this state /score returns a neutral 0.5 probability that is not a model output.';
+        'The API is reachable but reports no loaded models. Scoring is unavailable until the model bundle loads; /score returns HTTP 503 in this state.';
     } else if (state === 'healthy' && health.features_count === 0) {
       serviceNote = 'Models are loaded but the feature list is empty, so scores may not reflect trained features.';
     } else if (state === 'checking') {

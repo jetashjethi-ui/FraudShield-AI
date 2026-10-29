@@ -28,8 +28,9 @@ The dashboard sends API requests through its server-side proxy. Render uses a fr
 
 ```text
 Browser
-  └─ Next.js dashboard and same-origin API proxy
-       └─ FastAPI scoring service
+  ├─ Static HTML/CSS/JS dashboard served by Next.js on Vercel
+  └─ API requests → same-origin Next.js proxy on Vercel
+       └─ FastAPI scoring service on Render
             ├─ fitted feature pipeline
             ├─ XGBoost, LightGBM, CatBoost, Random Forest, and MLP
             └─ stack, calibrator, and saved evaluation results
@@ -63,7 +64,7 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The API is available at [http://127.0.0.1:8000](http://127.0.0.1:8000), with interactive documentation at `/docs`. The included bundle supports the demo without the training dataset.
+Open [http://localhost:3000](http://localhost:3000). The API is available at [http://127.0.0.1:8000](http://127.0.0.1:8000), with interactive documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The included bundle supports the demo without the training dataset.
 
 ## Train a new model bundle
 
@@ -87,15 +88,19 @@ Training replaces the serving bundle in `outputs/model_artifacts/` and writes ev
 
 | Method | Route | Purpose |
 | --- | --- | --- |
+| `GET` | `/` | Service name, version, and status-route links |
 | `POST` | `/score` | Detailed single-transaction score |
 | `POST` | `/predict` | Compact single-transaction score |
 | `POST` | `/batch` | Score 1–500 transactions |
+| `GET` | `/roi` | Describe the inputs required by the ROI estimator |
 | `POST` | `/roi` | Calculate a scenario from supplied assumptions and saved model metrics |
 | `GET` | `/health` | Process liveness |
 | `GET` | `/ready` | Model-bundle readiness |
 | `GET` | `/model-info` | Loaded model and feature information |
 | `GET` | `/metrics` | Saved evaluation metrics for the dashboard |
 | `GET` | `/docs` | Interactive API documentation |
+| `GET` | `/redoc` | Alternative API documentation |
+| `GET` | `/openapi.json` | OpenAPI schema |
 
 For request schemas and scoring behavior, see [DOCUMENTATION.md](DOCUMENTATION.md). The API processes timestamped batches chronologically and returns results in the original order. Without timestamps, supplied order determines the history features. Entity history is held in memory by one API process, so multi-worker deployment needs shared history storage.
 
@@ -118,7 +123,7 @@ main.py                     training and evaluation entry point
 src/                        feature, model, inference, and evaluation code
 outputs/model_artifacts/    included schema-versioned scoring bundle
 outputs/results/            saved model and evaluation summaries
-frontend/                   Next.js dashboard and server-side API proxy
+frontend/                   static dashboard and Next.js server-side API proxy
 tests/                      backend preflight tests
 ```
 
